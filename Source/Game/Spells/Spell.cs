@@ -2073,12 +2073,12 @@ namespace Game.Spells
                     foreach (SpellEffectInfo auraSpellEffect in GetEffects())
                         if (auraSpellEffect != null)
                             basePoints[auraSpellEffect.EffectIndex] =  (m_spellValue.CustomBasePointsMask & (1 << (int)auraSpellEffect.EffectIndex)) != 0 ?
-                                m_spellValue.EffectBasePoints[auraSpellEffect.EffectIndex] : auraSpellEffect.CalcBaseValue(m_originalCaster, unit, m_castItemLevel);
+                                m_spellValue.EffectBasePoints[auraSpellEffect.EffectIndex] : auraSpellEffect.CalcBaseValue(m_originalCaster, unit, m_castItemEntry, m_castItemLevel);
 
                     bool refresh = false;
                     bool resetPeriodicTimer = !_triggeredCastFlags.HasAnyFlag(TriggerCastFlags.DontResetPeriodicTimer);
                     m_spellAura = Aura.TryRefreshStackOrCreate(m_spellInfo, m_castId, (byte)effectMask, unit,
-                        m_originalCaster, out refresh, basePoints, m_CastItem, ObjectGuid.Empty, resetPeriodicTimer, ObjectGuid.Empty, m_castItemLevel);
+                        m_originalCaster, out refresh, basePoints, m_CastItem, ObjectGuid.Empty, resetPeriodicTimer, ObjectGuid.Empty, m_castItemEntry, m_castItemLevel);
                     if (m_spellAura != null)
                     {
                         // Set aura stack amount to desired value
@@ -6234,6 +6234,37 @@ namespace Game.Spells
                             }
                             break;
                         }
+                    case SpellEffectName.RespecAzeriteEmpoweredItem:
+                        {
+                            Item item = m_targets.GetItemTarget();
+                            if (item == null)
+                                return SpellCastResult.AzeriteEmpoweredOnly;
+
+                            if (item.GetOwnerGUID() != m_caster.GetGUID())
+                                return SpellCastResult.DontReport;
+
+                            AzeriteEmpoweredItem azeriteEmpoweredItem = item.ToAzeriteEmpoweredItem();
+                            if (azeriteEmpoweredItem == null)
+                                return SpellCastResult.AzeriteEmpoweredOnly;
+
+                            bool hasSelections = false;
+                            for (int tier = 0; tier < azeriteEmpoweredItem.GetMaxAzeritePowerTier(); ++tier)
+                            {
+                                if (azeriteEmpoweredItem.GetSelectedAzeritePower(tier) != 0)
+                                {
+                                    hasSelections = true;
+                                    break;
+                                }
+                            }
+
+                            if (!hasSelections)
+                                return SpellCastResult.AzeriteEmpoweredNoChoicesToUndo;
+
+                            if (!m_caster.ToPlayer().HasEnoughMoney(azeriteEmpoweredItem.GetRespecCost()))
+                                return SpellCastResult.DontReport;
+
+                            break;
+                        }
                     default:
                         break;
                 }
@@ -7121,7 +7152,7 @@ namespace Game.Spells
             if ((m_spellValue.CustomBasePointsMask & (1 << (int)i)) != 0)
                 basePoint = m_spellValue.EffectBasePoints[i];
 
-            return m_caster.CalculateSpellDamage(target, m_spellInfo, i, basePoint, m_castItemLevel);
+            return m_caster.CalculateSpellDamage(target, m_spellInfo, i, basePoint, m_castItemEntry, m_castItemLevel);
         }
         int CalculateDamage(uint i, Unit target, out float variance)
         {
@@ -7129,7 +7160,7 @@ namespace Game.Spells
             if ((m_spellValue.CustomBasePointsMask & (1 << (int)i)) != 0)
                 basePoint = m_spellValue.EffectBasePoints[i];
 
-            return m_caster.CalculateSpellDamage(target, m_spellInfo, i, out variance, basePoint, m_castItemLevel);
+            return m_caster.CalculateSpellDamage(target, m_spellInfo, i, out variance, basePoint, m_castItemEntry, m_castItemLevel);
         }
         public SpellState GetState()
         {
@@ -7566,7 +7597,7 @@ namespace Game.Spells
             Cypher.Assert(effects.Length <= SpellConst.MaxEffects);
             foreach (SpellEffectInfo effect in effects)
                 if (effect != null)
-                    EffectBasePoints[effect.EffectIndex] = effect.CalcBaseValue(caster, null, -1);
+                    EffectBasePoints[effect.EffectIndex] = effect.CalcBaseValue(caster, null, 0, -1);
 
             CustomBasePointsMask = 0;
             MaxAffectedTargets = proto.MaxAffectedTargets;

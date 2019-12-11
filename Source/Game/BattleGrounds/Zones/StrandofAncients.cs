@@ -107,7 +107,7 @@ namespace Game.BattleGrounds.Zones
             {
                 if (!AddObject(i, SAMiscConst.ObjEntries[i], SAMiscConst.ObjSpawnlocs[i], 0, 0, 0, 0, BattlegroundConst.RespawnOneDay))
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn BG_SA_PORTAL_DEFFENDER_RED, Entry: %u", SAMiscConst.ObjEntries[i]);
+                    Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn BG_SA_PORTAL_DEFFENDER_RED, Entry: {SAMiscConst.ObjEntries[i]}");
                     continue;
                 }
             }
@@ -131,7 +131,7 @@ namespace Game.BattleGrounds.Zones
                   SAMiscConst.ObjSpawnlocs[i].GetPositionZ() + (Attackers != 0 ? -3.750f : 0),
                   SAMiscConst.ObjSpawnlocs[i].GetOrientation(), 0, 0, 0, 0, BattlegroundConst.RespawnOneDay))
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn one of the BG_SA_BOAT, Entry: %u", boatid);
+                    Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn one of the BG_SA_BOAT, Entry: {boatid}");
                     continue;
                 }
             }
@@ -140,7 +140,7 @@ namespace Game.BattleGrounds.Zones
             {
                 if (!AddObject(i, SAMiscConst.ObjEntries[i], SAMiscConst.ObjSpawnlocs[i], 0, 0, 0, 0, BattlegroundConst.RespawnOneDay))
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn Sigil, Entry: %u", SAMiscConst.ObjEntries[i]);
+                    Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn Sigil, Entry: {SAMiscConst.ObjEntries[i]}");
                     continue;
                 }
             }
@@ -157,7 +157,7 @@ namespace Game.BattleGrounds.Zones
             {
                 if (!AddCreature(SAMiscConst.NpcEntries[i], i, SAMiscConst.NpcSpawnlocs[i], Attackers == TeamId.Alliance ? TeamId.Horde : TeamId.Alliance, 600))
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn Cannon or demolisher, Entry: %u, Attackers: %s", SAMiscConst.NpcEntries[i], Attackers == TeamId.Alliance ? "Horde(1)" : "Alliance(0)");
+                    Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn Cannon or demolisher, Entry: {SAMiscConst.NpcEntries[i]}, Attackers: {(Attackers == TeamId.Alliance ? "Horde(1)" : "Alliance(0)")}");
                     continue;
                 }
             }
@@ -180,23 +180,23 @@ namespace Game.BattleGrounds.Zones
             //Graveyards
             for (byte i = 0; i < SAGraveyards.Max; i++)
             {
-                WorldSafeLocsRecord sg = CliDB.WorldSafeLocsStorage.LookupByKey(SAMiscConst.GYEntries[i]);
+                WorldSafeLocsEntry sg = Global.ObjectMgr.GetWorldSafeLoc(SAMiscConst.GYEntries[i]);
                 if (sg == null)
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: Can't find GY entry %u", SAMiscConst.GYEntries[i]);
+                    Log.outError(LogFilter.Battleground, $"SOTA: Can't find GY entry {SAMiscConst.GYEntries[i]}");
                     return false;
                 }
 
                 if (i == SAGraveyards.BeachGy)
                 {
                     GraveyardStatus[i] = Attackers;
-                    AddSpiritGuide(i + SACreatureTypes.Max, sg.Loc.X, sg.Loc.Y, sg.Loc.Z, SAMiscConst.GYOrientation[i], Attackers);
+                    AddSpiritGuide(i + SACreatureTypes.Max, sg.Loc.GetPositionX(), sg.Loc.GetPositionY(), sg.Loc.GetPositionZ(), SAMiscConst.GYOrientation[i], Attackers);
                 }
                 else
                 {
                     GraveyardStatus[i] = ((Attackers == TeamId.Horde) ? TeamId.Alliance : TeamId.Horde);
-                    if (!AddSpiritGuide(i + SACreatureTypes.Max, sg.Loc.X, sg.Loc.Y, sg.Loc.Z, SAMiscConst.GYOrientation[i], Attackers == TeamId.Horde ? TeamId.Alliance : TeamId.Horde))
-                        Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn GY: %u", i);
+                    if (!AddSpiritGuide(i + SACreatureTypes.Max, sg.Loc.GetPositionX(), sg.Loc.GetPositionY(), sg.Loc.GetPositionZ(), SAMiscConst.GYOrientation[i], Attackers == TeamId.Horde ? TeamId.Alliance : TeamId.Horde))
+                        Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn GY: {i}");
                 }
             }
 
@@ -205,7 +205,7 @@ namespace Game.BattleGrounds.Zones
             {
                 if (!AddObject(i, (SAMiscConst.ObjEntries[i] - (Attackers == TeamId.Alliance ? 1u : 0)), SAMiscConst.ObjSpawnlocs[i], 0, 0, 0, 0, BattlegroundConst.RespawnOneDay))
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn Central Flag Entry: %u", SAMiscConst.ObjEntries[i] - (Attackers == TeamId.Alliance ? 1 : 0));
+                    Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn Central Flag Entry: {SAMiscConst.ObjEntries[i] - (Attackers == TeamId.Alliance ? 1 : 0)}");
                     continue;
                 }
                 GetBGObject(i).SetFaction(atF);
@@ -217,7 +217,7 @@ namespace Game.BattleGrounds.Zones
             {
                 if (!AddObject(i, SAMiscConst.ObjEntries[SAObjectTypes.Bomb], SAMiscConst.ObjSpawnlocs[i], 0, 0, 0, 0, BattlegroundConst.RespawnOneDay))
                 {
-                    Log.outError(LogFilter.Battleground, "SOTA: couldn't spawn SA Bomb Entry: %u", SAMiscConst.ObjEntries[SAObjectTypes.Bomb] + i);
+                    Log.outError(LogFilter.Battleground, $"SOTA: couldn't spawn SA Bomb Entry: {SAMiscConst.ObjEntries[SAObjectTypes.Bomb] + i}");
                     continue;
                 }
                 GetBGObject(i).SetFaction(atF);
@@ -700,7 +700,7 @@ namespace Game.BattleGrounds.Zones
         {
         }
 
-        public override WorldSafeLocsRecord GetClosestGraveYard(Player player)
+        public override WorldSafeLocsEntry GetClosestGraveYard(Player player)
         {
             uint safeloc = 0;
 
@@ -709,16 +709,16 @@ namespace Game.BattleGrounds.Zones
             else
                 safeloc = SAMiscConst.GYEntries[SAGraveyards.DefenderLastGy];
 
-            WorldSafeLocsRecord closest = CliDB.WorldSafeLocsStorage.LookupByKey(safeloc);
-            float nearest = player.GetExactDistSq(closest.Loc.X, closest.Loc.Y, closest.Loc.Z);
+            WorldSafeLocsEntry closest = Global.ObjectMgr.GetWorldSafeLoc(safeloc);
+            float nearest = player.GetExactDistSq(closest.Loc);
 
             for (byte i = SAGraveyards.RightCapturableGy; i < SAGraveyards.Max; i++)
             {
                 if (GraveyardStatus[i] != player.GetTeamId())
                     continue;
 
-                WorldSafeLocsRecord ret = CliDB.WorldSafeLocsStorage.LookupByKey(SAMiscConst.GYEntries[i]);
-                float dist = player.GetExactDistSq(ret.Loc.X, ret.Loc.Y, ret.Loc.Z);
+                WorldSafeLocsEntry ret = Global.ObjectMgr.GetWorldSafeLoc(SAMiscConst.GYEntries[i]);
+                float dist = player.GetExactDistSq(ret.Loc);
                 if (dist < nearest)
                 {
                     closest = ret;
@@ -812,14 +812,14 @@ namespace Game.BattleGrounds.Zones
 
             DelCreature(SACreatureTypes.Max + i);
             GraveyardStatus[i] = Source.GetTeamId();
-            WorldSafeLocsRecord sg = CliDB.WorldSafeLocsStorage.LookupByKey(SAMiscConst.GYEntries[i]);
+            WorldSafeLocsEntry sg = Global.ObjectMgr.GetWorldSafeLoc(SAMiscConst.GYEntries[i]);
             if (sg == null)
             {
-                Log.outError(LogFilter.Battleground, "CaptureGraveyard: non-existant GY entry: %u", SAMiscConst.GYEntries[i]);
+                Log.outError(LogFilter.Battleground, $"CaptureGraveyard: non-existant GY entry: {SAMiscConst.GYEntries[i]}");
                 return;
             }
 
-            AddSpiritGuide(i + SACreatureTypes.Max, sg.Loc.X, sg.Loc.Y, sg.Loc.Z, SAMiscConst.GYOrientation[i], GraveyardStatus[i]);
+            AddSpiritGuide(i + SACreatureTypes.Max, sg.Loc.GetPositionX(), sg.Loc.GetPositionY(), sg.Loc.GetPositionZ(), SAMiscConst.GYOrientation[i], GraveyardStatus[i]);
             uint npc = 0;
             int flag = 0;
 
@@ -1088,6 +1088,25 @@ namespace Game.BattleGrounds.Zones
             return true;
         }
 
+        public override bool UpdatePlayerScore(Player player, ScoreType type, uint value, bool doAddHonor = true)
+        {
+            if (!base.UpdatePlayerScore(player, type, value, doAddHonor))
+                return false;
+
+            switch (type)
+            {
+                case ScoreType.DestroyedDemolisher:
+                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, (uint)SAObjectives.DemolishersDestroyed);
+                    break;
+                case ScoreType.DestroyedWall:
+                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, (uint)SAObjectives.GatesDestroyed);
+                    break;
+                default:
+                    break;
+            }
+            return true;
+        }
+
         SAGateInfo GetGate(uint entry)
         {
             foreach (var gate in SAMiscConst.Gates)
@@ -1157,8 +1176,8 @@ namespace Game.BattleGrounds.Zones
         {
             base.BuildPvPLogPlayerDataPacket(out playerData);
 
-            playerData.Stats.Add(DemolishersDestroyed);
-            playerData.Stats.Add(GatesDestroyed);
+            playerData.Stats.Add(new PVPLogData.PVPMatchPlayerPVPStat((int)SAObjectives.DemolishersDestroyed, DemolishersDestroyed));
+            playerData.Stats.Add(new PVPLogData.PVPMatchPlayerPVPStat((int)SAObjectives.GatesDestroyed, GatesDestroyed));
         }
 
         public override uint GetAttr1() { return DemolishersDestroyed; }
@@ -1642,6 +1661,12 @@ namespace Game.BattleGrounds.Zones
         public const int LeftCapturableGy = 3;
         public const int CentralCapturableGy = 4;
         public const int Max = 5;
+    }
+
+    enum SAObjectives
+    {
+        GatesDestroyed = 231,
+        DemolishersDestroyed = 232
     }
     #endregion
 }

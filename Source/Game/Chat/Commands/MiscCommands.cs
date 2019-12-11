@@ -345,7 +345,7 @@ namespace Game.Chat
                 return false;
             }
 
-            Item item = playerTarget.StoreNewItem(dest, itemId, true, ItemEnchantmentManager.GenerateItemRandomBonusListId(itemId), null, 0, bonusListIDs);
+            Item item = playerTarget.StoreNewItem(dest, itemId, true, ItemEnchantmentManager.GenerateItemRandomBonusListId(itemId), null, ItemContext.None, bonusListIDs);
 
             // remove binding (let GM give it to another player later)
             if (player == playerTarget)
@@ -420,7 +420,7 @@ namespace Game.Chat
                     InventoryResult msg = playerTarget.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, template.Value.GetId(), 1);
                     if (msg == InventoryResult.Ok)
                     {
-                        Item item = playerTarget.StoreNewItem(dest, template.Value.GetId(), true, 0, null, 0, bonusListIDs);
+                        Item item = playerTarget.StoreNewItem(dest, template.Value.GetId(), true, 0, null, ItemContext.None, bonusListIDs);
 
                         // remove binding (let GM give it to another player later)
                         if (player == playerTarget)
@@ -1069,7 +1069,7 @@ namespace Game.Chat
             else
                 return false;
 
-            WorldSafeLocsRecord graveyard = CliDB.WorldSafeLocsStorage.LookupByKey(graveyardId);
+            WorldSafeLocsEntry graveyard = Global.ObjectMgr.GetWorldSafeLoc(graveyardId);
             if (graveyard == null)
             {
                 handler.SendSysMessage(CypherStrings.CommandGraveyardnoexist, graveyardId);
@@ -1112,7 +1112,7 @@ namespace Game.Chat
             Player player = handler.GetSession().GetPlayer();
             uint zone_id = player.GetZoneId();
 
-            WorldSafeLocsRecord graveyard = Global.ObjectMgr.GetClosestGraveYard(player, team, null);
+            WorldSafeLocsEntry graveyard = Global.ObjectMgr.GetClosestGraveYard(player, team, null);
             if (graveyard != null)
             {
                 uint graveyardId = graveyard.Id;

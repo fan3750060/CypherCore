@@ -218,7 +218,6 @@ namespace Game.Entities
         uint m_zoneUpdateTimer;
 
         uint m_ChampioningFaction;
-        byte m_grantableLevels;
         byte m_fishingSteps;
 
         // Recall position
@@ -446,13 +445,12 @@ namespace Game.Entities
 
     public class VoidStorageItem
     {
-        public VoidStorageItem(ulong id, uint entry, ObjectGuid creator, uint randomBonusListId, uint upgradeId, uint fixedScalingLevel, uint artifactKnowledgeLevel, byte context, List<uint> bonuses)
+        public VoidStorageItem(ulong id, uint entry, ObjectGuid creator, uint randomBonusListId, uint fixedScalingLevel, uint artifactKnowledgeLevel, ItemContext context, List<uint> bonuses)
         {
             ItemId = id;
             ItemEntry = entry;
             CreatorGuid = creator;
             RandomBonusListId = randomBonusListId;
-            ItemUpgradeId = upgradeId;
             FixedScalingLevel = fixedScalingLevel;
             ArtifactKnowledgeLevel = artifactKnowledgeLevel;
             Context = context;
@@ -465,10 +463,9 @@ namespace Game.Entities
         public uint ItemEntry;
         public ObjectGuid CreatorGuid;
         public uint RandomBonusListId;
-        public uint ItemUpgradeId;
         public uint FixedScalingLevel;
         public uint ArtifactKnowledgeLevel;
-        public byte Context;
+        public ItemContext Context;
         public List<uint> BonusListIDs = new List<uint>();
     }
 
@@ -545,14 +542,14 @@ namespace Game.Entities
     {
         public CUFProfile()
         {
-            BoolOptions = new BitArray((int)CUFBoolOptions.BoolOptionsCount);
+            BoolOptions = new BitSet((int)CUFBoolOptions.BoolOptionsCount);
         }
 
         public CUFProfile(string name, ushort frameHeight, ushort frameWidth, byte sortBy, byte healthText, uint boolOptions,
             byte topPoint, byte bottomPoint, byte leftPoint, ushort topOffset, ushort bottomOffset, ushort leftOffset)
         {
             ProfileName = name;
-            BoolOptions = new BitArray(new int[] { (int)boolOptions });
+            BoolOptions = new BitSet(new uint[] { boolOptions });
 
             FrameHeight = frameHeight;
             FrameWidth = frameWidth;
@@ -576,7 +573,7 @@ namespace Game.Entities
         }
         public ulong GetUlongOptionValue()
         {
-            int[] array = new int[1];
+            uint[] array = new uint[1];
             BoolOptions.CopyTo(array, 0);
             return (ulong)array[0];
         }
@@ -597,7 +594,7 @@ namespace Game.Entities
         public ushort BottomOffset;
         public ushort LeftOffset;
 
-        public BitArray BoolOptions;
+        public BitSet BoolOptions;
 
         // More fields can be added to BoolOptions without changing DB schema (up to 32, currently 27)
     }

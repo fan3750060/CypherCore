@@ -156,9 +156,8 @@ namespace Game
                 }
 
                 VoidStorageItem itemVS = new VoidStorageItem(Global.ObjectMgr.GenerateVoidStorageItemId(), item.GetEntry(), item.GetCreator(), 
-                    item.GetItemRandomBonusListId(), item.GetModifier(ItemModifier.UpgradeId),
-                    item.GetModifier(ItemModifier.ScalingStatDistributionFixedLevel), item.GetModifier(ItemModifier.ArtifactKnowledgeLevel), 
-                    (byte)item.m_itemData.Context, item.m_itemData.BonusListIDs);
+                    item.GetItemRandomBonusListId(), item.GetModifier(ItemModifier.TimewalkerLevel), item.GetModifier(ItemModifier.ArtifactKnowledgeLevel), 
+                    item.GetContext(), item.m_itemData.BonusListIDs);
 
                 VoidItem voidItem;
                 voidItem.Guid = ObjectGuid.Create(HighGuid.Item, itemVS.ItemId);
@@ -197,7 +196,6 @@ namespace Game
 
                 Item item = player.StoreNewItem(dest, itemVS.ItemEntry, true, itemVS.RandomBonusListId, null, itemVS.Context, itemVS.BonusListIDs);
                 item.SetCreator(itemVS.CreatorGuid);
-                item.SetModifier(ItemModifier.UpgradeId, itemVS.ItemUpgradeId);
                 item.SetBinding(true);
                 GetCollectionMgr().AddItemAppearance(item);
 

@@ -202,6 +202,7 @@ namespace Game.Network.Packets
                 _worldPacket.WriteInt32(Info.TreasurePickerID);
                 _worldPacket.WriteInt32(Info.Expansion);
                 _worldPacket.WriteInt32(Info.ManagedWorldStateID);
+                _worldPacket.WriteInt32(Info.QuestSessionBonus);
 
                 _worldPacket.WriteBits(Info.LogTitle.GetByteCount(), 9);
                 _worldPacket.WriteBits(Info.LogDescription.GetByteCount(), 12);
@@ -216,7 +217,7 @@ namespace Game.Network.Packets
 
                 foreach (QuestObjective questObjective in Info.Objectives)
                 {
-                    _worldPacket.WriteUInt32(questObjective.ID);
+                    _worldPacket.WriteUInt32(questObjective.Id);
                     _worldPacket.WriteUInt8((byte)questObjective.Type);
                     _worldPacket.WriteInt8(questObjective.StorageIndex);
                     _worldPacket.WriteInt32(questObjective.ObjectID);
@@ -428,6 +429,7 @@ namespace Game.Network.Packets
             _worldPacket.WriteInt32(DescEmotes.Count);
             _worldPacket.WriteInt32(Objectives.Count);
             _worldPacket.WriteInt32(QuestStartItemID);
+            _worldPacket.WriteInt32(QuestSessionBonus);
 
             foreach (uint spell in LearnSpells)
                 _worldPacket.WriteUInt32(spell);
@@ -440,7 +442,7 @@ namespace Game.Network.Packets
 
             foreach (QuestObjectiveSimple obj in Objectives)
             {
-                _worldPacket.WriteUInt32(obj.ID);
+                _worldPacket.WriteUInt32(obj.Id);
                 _worldPacket.WriteInt32(obj.ObjectID);
                 _worldPacket.WriteInt32(obj.Amount);
                 _worldPacket.WriteUInt8(obj.Type);
@@ -454,6 +456,7 @@ namespace Game.Network.Packets
             _worldPacket.WriteBits(PortraitTurnInText.GetByteCount(), 10);
             _worldPacket.WriteBits(PortraitTurnInName.GetByteCount(), 8);
             _worldPacket.WriteBit(AutoLaunched);
+            _worldPacket.WriteBit(false);   // unused in client
             _worldPacket.WriteBit(StartCheat);
             _worldPacket.WriteBit(DisplayPopup);
             _worldPacket.FlushBits();
@@ -483,6 +486,7 @@ namespace Game.Network.Packets
         public uint PortraitGiver;
         public uint PortraitGiverMount;
         public int QuestStartItemID;
+        public int QuestSessionBonus;
         public string PortraitGiverText = "";
         public string PortraitGiverName = "";
         public string PortraitTurnInText = "";
@@ -969,6 +973,7 @@ namespace Game.Network.Packets
         public int TreasurePickerID;
         public int Expansion;
         public int ManagedWorldStateID;
+        public int QuestSessionBonus;
         public List<QuestObjective> Objectives = new List<QuestObjective>();
         public uint[] RewardItems = new uint[SharedConst.QuestRewardItemCount];
         public uint[] RewardAmount = new uint[SharedConst.QuestRewardItemCount];
@@ -1117,7 +1122,7 @@ namespace Game.Network.Packets
 
     public struct QuestObjectiveSimple
     {
-        public uint ID;
+        public uint Id;
         public int ObjectID;
         public int Amount;
         public byte Type;

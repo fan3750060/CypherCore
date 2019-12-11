@@ -278,6 +278,23 @@ namespace Game.Network.Packets
         public string OldGuildName;
     }
 
+    public class GuildEventAwayChange : ServerPacket
+    {
+        public GuildEventAwayChange() : base(ServerOpcodes.GuildEventAwayChange) { }
+
+        public override void Write()
+        {
+            _worldPacket.WritePackedGuid(Guid);
+            _worldPacket.WriteBit(AFK);
+            _worldPacket.WriteBit(DND);
+            _worldPacket.FlushBits();
+        }
+
+        public ObjectGuid Guid;
+        public bool AFK;
+        public bool DND;
+    }
+
     public class GuildEventPresenceChange : ServerPacket
     {
         public GuildEventPresenceChange() : base(ServerOpcodes.GuildEventPresenceChange) { }
@@ -559,7 +576,6 @@ namespace Game.Network.Packets
             RankID = _worldPacket.ReadInt32();
             RankOrder = _worldPacket.ReadInt32();
             Flags = _worldPacket.ReadUInt32();
-            OldFlags = _worldPacket.ReadUInt32();
             WithdrawGoldLimit = _worldPacket.ReadUInt32();
 
             for (byte i = 0; i < GuildConst.MaxBankTabs; i++)
@@ -572,6 +588,8 @@ namespace Game.Network.Packets
             uint rankNameLen = _worldPacket.ReadBits<uint>(7);
 
             RankName = _worldPacket.ReadString(rankNameLen);
+
+            OldFlags = _worldPacket.ReadUInt32();
         }
 
         public int RankID;
@@ -1445,7 +1463,7 @@ namespace Game.Network.Packets
     {
         public void Write(WorldPacket data)
         {
-            data.WriteUInt32(RankID);
+            data.WriteUInt8(RankID);
             data.WriteUInt32(RankOrder);
             data.WriteUInt32(Flags);
             data.WriteUInt32(WithdrawGoldLimit);
@@ -1460,7 +1478,7 @@ namespace Game.Network.Packets
             data.WriteString(RankName);
         }
 
-        public uint RankID;
+        public byte RankID;
         public uint RankOrder;
         public uint Flags;
         public uint WithdrawGoldLimit;

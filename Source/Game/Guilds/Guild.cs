@@ -327,7 +327,7 @@ namespace Game.Guilds
                             CriteriaManager.WalkCriteriaTree(tree, node =>
                             {
                                 if (node.Criteria != null)
-                                    criteriaIds.Add(node.Criteria.ID);
+                                    criteriaIds.Add(node.Criteria.Id);
                             });
                         }
                     }
@@ -1091,6 +1091,29 @@ namespace Game.Guilds
             member.AddFlag(GuildMemberFlags.Online);
         }
 
+        public void SendEventAwayChanged(ObjectGuid memberGuid, bool afk, bool dnd)
+        {
+            Member member = GetMember(memberGuid);
+            if (member == null)
+                return;
+
+            if (afk)
+                member.AddFlag(GuildMemberFlags.AFK);
+            else
+                member.RemoveFlag(GuildMemberFlags.AFK);
+
+            if (dnd)
+                member.AddFlag(GuildMemberFlags.DND);
+            else
+                member.RemoveFlag(GuildMemberFlags.DND);
+
+            GuildEventAwayChange awayChange = new GuildEventAwayChange();
+            awayChange.Guid = memberGuid;
+            awayChange.AFK = afk;
+            awayChange.DND = dnd;
+            BroadcastPacket(awayChange);
+        }
+
         void SendEventBankMoneyChanged()
         {
             GuildEventBankMoneyChanged eventPacket = new GuildEventBankMoneyChanged();
@@ -1315,7 +1338,7 @@ namespace Game.Guilds
 
         public bool LoadBankItemFromDB(SQLFields field)
         {
-            byte tabId = field.Read<byte>(45);
+            byte tabId = field.Read<byte>(44);
             if (tabId >= _GetPurchasedTabsSize())
             {
                 Log.outError(LogFilter.Guild, "Invalid tab for item (GUID: {0}, id: {1}) in guild bank, skipped.",
@@ -3218,7 +3241,7 @@ namespace Game.Guilds
 
             public bool LoadItemFromDB(SQLFields field)
             {
-                byte slotId = field.Read<byte>(46);
+                byte slotId = field.Read<byte>(45);
                 uint itemGuid = field.Read<uint>(0);
                 uint itemEntry = field.Read<uint>(1);
                 if (slotId >= GuildConst.MaxBankSlots)

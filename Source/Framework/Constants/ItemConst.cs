@@ -304,7 +304,7 @@ namespace Framework.Constants
         BattlePetDisplayId = 6,
         EnchantIllusionAllSpecs = 7,
         ArtifactAppearanceId = 8,
-        ScalingStatDistributionFixedLevel = 9,
+        TimewalkerLevel = 9,
         EnchantIllusionSpec1 = 10,
         TransmogAppearanceSpec2 = 11,
         EnchantIllusionSpec2 = 12,
@@ -317,9 +317,11 @@ namespace Framework.Constants
         ChallengeKeystoneAffixId1 = 19,
         ChallengeKeystoneAffixId2 = 20,
         ChallengeKeystoneAffixId3 = 21,
-        ChallengeKeystoneIsCharged = 22,
+        ChallengeKeystoneAffixId4 = 22,
         ArtifactKnowledgeLevel = 23,
         ArtifactTier = 24,
+        Unused25 = 25,
+        PvpRating = 26,
 
         Max
     }
@@ -343,10 +345,13 @@ namespace Framework.Constants
         RandomEnchantment = 15, // Responsible for showing "<Random additional stats>" or "+%d Rank Random Minor Trait" in the tooltip before item is obtained
         Bounding = 16,
         RelicType = 17,
-        OverrideRequiredLevel = 18
+        OverrideRequiredLevel = 18,
+        AzeriteTierUnlockSet = 19,
+        OverrideCanDisenchant = 21,
+        OverrideCanScrap = 22
     }
 
-    enum ItemContext : byte
+    public enum ItemContext : byte
     {
         None = 0,
         DungeonNormal = 1,
@@ -815,6 +820,7 @@ namespace Framework.Constants
         Child = 0x00080000,
         Unk15 = 0x00100000, // ?
         NewItem = 0x00200000, // Item glows in inventory
+        AzeriteEmpoweredItemViewed = 0x00400000, // Won't play azerite powers animation when viewing it
         Unk17 = 0x00400000, // ?
         Unk18 = 0x00800000, // ?
         Unk19 = 0x01000000, // ?
@@ -825,6 +831,11 @@ namespace Framework.Constants
         Unk24 = 0x20000000, // ?
         Unk25 = 0x40000000, // ?
         Unk26 = 0x80000000 // ?
+    }
+
+    public enum ItemFieldFlags2
+    {
+        Equipped = 0x1
     }
 
     public enum ItemFlags : long
@@ -1064,6 +1075,7 @@ namespace Framework.Constants
         CantDoThatRightNow = 102,// You Can'T Do That Right Now.
         BagFull6 = 103,// That Bag Is Full.
         CantBeScrapped = 104,// You Can'T Scrap That Item
+        None4 = 105
     }
 
     public enum BuyResult
@@ -1138,6 +1150,7 @@ namespace Framework.Constants
         JusticePoints = 395,
         ValorPoints = 396,
         ApexisCrystals = 823,
+        Azerite = 1553
     }
 
     public enum PlayerCurrencyState
@@ -1160,5 +1173,21 @@ namespace Framework.Constants
         Fist,
 
         Invalid
+    }
+
+    public enum AzeriteEssenceActivateResult
+    {
+        None = 0,
+        EssenceNotUnlocked = 2,    // Arg: AzeriteEssenceID
+        CantDoThatRightNow = 3,
+        AffectingCombat = 4,
+        CantRemoveEssence = 5,    // Arg: SpellID of active essence on cooldown
+        ChallengeModeActive = 6,
+        NotInRestArea = 7,
+        ConditionFailed = 8,
+        SlotLocked = 9,
+        NotAtForge = 10,
+        HeartLevelTooLow = 11,   // Arg: RequiredLevel
+        NotEquipped = 12
     }
 }

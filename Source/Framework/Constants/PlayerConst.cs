@@ -64,6 +64,13 @@ namespace Framework.Constants
         public const int MaxHonorLevel = 500;
         public const byte LevelMinHonor = 110;
         public const uint SpellPvpRulesEnabled = 134735;
+
+        //Azerite
+        public const uint ItemIdHeartOfAzeroth = 158075;
+        public const uint MaxAzeriteItemLevel = 70;
+        public const uint MaxAzeriteItemKnowledgeLevel = 30;
+        public const uint PlayerConditionIdUnlockedAzeriteEssences = 69048;
+        public const uint SpellIdHeartEssenceActionBarOverride = 298554;
     }
 
     public struct MoneyConstants
@@ -733,10 +740,21 @@ namespace Framework.Constants
         FailedRestArea = 8
     }
 
-    public enum TutorialsFlag 
+    public enum TutorialsFlag
     {
         None = 0x00,
         Changed = 0x01,
         LoadedFromDB = 0x02
+    }
+
+    public enum ItemSearchLocation
+    {
+        InEquipment = 0x01,
+        InInventory = 0x02,
+        InBank = 0x04,
+        InReagentBank = 0x08,
+
+        Default = InEquipment | InInventory,
+        Everywhere = InEquipment | InInventory | InBank | InReagentBank
     }
 }

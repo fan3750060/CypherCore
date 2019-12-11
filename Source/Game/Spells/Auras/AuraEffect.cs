@@ -32,12 +32,12 @@ namespace Game.Spells
 {
     public class AuraEffect
     {
-        public AuraEffect(Aura abase, uint effindex, int? baseAmount, Unit caster)
+        public AuraEffect(Aura baseAura, uint effindex, int? baseAmount, Unit caster)
         {
-            auraBase = abase;
-            m_spellInfo = abase.GetSpellInfo();
-            _effectInfo = abase.GetSpellEffectInfo(effindex);
-            m_baseAmount = baseAmount.HasValue ? baseAmount.Value : _effectInfo.CalcBaseValue(caster, abase.GetAuraType() == AuraObjectType.Unit ? abase.GetOwner().ToUnit() : null, abase.GetCastItemLevel());
+            auraBase = baseAura;
+            m_spellInfo = baseAura.GetSpellInfo();
+            _effectInfo = baseAura.GetSpellEffectInfo(effindex);
+            m_baseAmount = baseAmount.HasValue ? baseAmount.Value : _effectInfo.CalcBaseValue(caster, baseAura.GetAuraType() == AuraObjectType.Unit ? baseAura.GetOwner().ToUnit() : null, baseAura.GetCastItemId(), baseAura.GetCastItemLevel());
             m_donePct = 1.0f;
             m_effIndex = (byte)effindex;
             m_canBeRecalculated = true;
@@ -76,7 +76,7 @@ namespace Game.Spells
             int amount = 0;
 
             if (!m_spellInfo.HasAttribute(SpellAttr8.MasterySpecialization) || MathFunctions.fuzzyEq(GetSpellEffectInfo().BonusCoefficient, 0.0f))
-                amount = GetSpellEffectInfo().CalcValue(caster, m_baseAmount, GetBase().GetOwner().ToUnit(), GetBase().GetCastItemLevel());
+                amount = GetSpellEffectInfo().CalcValue(caster, m_baseAmount, GetBase().GetOwner().ToUnit(), GetBase().GetCastItemId(), GetBase().GetCastItemLevel());
             else if (caster != null && caster.IsTypeId(TypeId.Player))
                 amount = (int)(caster.ToPlayer().m_activePlayerData.Mastery * GetSpellEffectInfo().BonusCoefficient);
 
@@ -3907,19 +3907,6 @@ namespace Game.Spells
             target.HandleStatModifier(UnitMods.AttackPowerRanged, UnitModifierType.TotalPCT, GetAmount(), apply);
         }
 
-        [AuraEffectHandler(AuraType.ModAttackPowerOfArmor)]
-        void HandleAuraModAttackPowerOfArmor(AuraApplication aurApp, AuraEffectHandleModes mode, bool apply)
-        {
-            if (!mode.HasAnyFlag((AuraEffectHandleModes.ChangeAmountMask | AuraEffectHandleModes.Stat)))
-                return;
-
-            Unit target = aurApp.GetTarget();
-
-            // Recalculate bonus
-            if (target.IsTypeId(TypeId.Player))
-                target.ToPlayer().UpdateAttackPowerAndDamage(false);
-        }
-
         /********************************/
         /***        DAMAGE BONUS      ***/
         /********************************/
@@ -5031,7 +5018,7 @@ namespace Game.Spells
                                             if (creature.GetCreatureTemplate().SkinLootId == 0)
                                                 return;
 
-                                            player.AutoStoreLoot(creature.GetCreatureTemplate().SkinLootId, LootStorage.Skinning, true);
+                                            player.AutoStoreLoot(creature.GetCreatureTemplate().SkinLootId, LootStorage.Skinning, ItemContext.None, true);
 
                                             creature.DespawnOrUnsummon();
                                         }

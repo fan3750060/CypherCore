@@ -584,6 +584,8 @@ namespace Game.Entities
                     break;
                 case TypeId.Item:
                 case TypeId.Container:
+                case TypeId.AzeriteItem:
+                case TypeId.AzeriteEmpoweredItem:
                     {
                         Item item = (Item)questGiver;
                         Global.ScriptMgr.OnQuestAccept(this, item, quest);
@@ -993,7 +995,7 @@ namespace Game.Entities
                             SendNewItem(item, quest.RewardItemCount[i], true, false);
                         }
                         else if (quest.IsDFQuest())
-                            SendItemRetrievalMail(quest.RewardItemId[i], quest.RewardItemCount[i]);
+                            SendItemRetrievalMail(quest.RewardItemId[i], quest.RewardItemCount[i], ItemContext.QuestReward);
                     }
                 }
             }
@@ -1121,7 +1123,7 @@ namespace Game.Entities
             }
 
             if (quest.QuestSortID > 0)
-                UpdateCriteria(CriteriaTypes.CompleteQuestsInZone, (ulong)quest.QuestSortID);
+                UpdateCriteria(CriteriaTypes.CompleteQuestsInZone, quest.Id);
 
             UpdateCriteria(CriteriaTypes.CompleteQuestCount);
             UpdateCriteria(CriteriaTypes.CompleteQuest, quest.Id);

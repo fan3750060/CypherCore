@@ -1269,7 +1269,7 @@ namespace Game.Groups
                                 List<ItemPosCount> dest = new List<ItemPosCount>();
                                 InventoryResult msg = player.CanStoreNewItem(ItemConst.NullBag, ItemConst.NullSlot, dest, roll.itemid, item.count);
                                 if (msg == InventoryResult.Ok)
-                                    player.AutoStoreLoot(disenchant.Id, LootStorage.Disenchant, true);
+                                    player.AutoStoreLoot(disenchant.Id, LootStorage.Disenchant, ItemContext.None, true);
                                 else // If the player's inventory is full, send the disenchant result in a mail.
                                 {
                                     Loot loot = new Loot();
@@ -1280,7 +1280,7 @@ namespace Game.Groups
                                     {
                                         LootItem lootItem = loot.LootItemInSlot(i, player);
                                         player.SendEquipError(msg, null, null, lootItem.itemid);
-                                        player.SendItemRetrievalMail(lootItem.itemid, lootItem.count);
+                                        player.SendItemRetrievalMail(lootItem.itemid, lootItem.count, lootItem.context);
                                     }
                                 }
                             }
@@ -1426,22 +1426,19 @@ namespace Game.Groups
                 partyUpdate.LfgInfos.Value.Aborted = false;
 
                 partyUpdate.LfgInfos.Value.MyFlags = (byte)(Global.LFGMgr.GetState(m_guid) == LfgState.FinishedDungeon ? 2 : 0);
-
-                uint randomSlot = 0;
-                var selectedDungeons = Global.LFGMgr.GetSelectedDungeons(player.GetGUID());
-                if (selectedDungeons.Count == 1)
-                {
-                    LFGDungeonsRecord dungeon = CliDB.LFGDungeonsStorage.LookupByKey(selectedDungeons.First());
-                    if (dungeon != null)
-                        if (dungeon.TypeID == LfgType.RandomDungeon)
-                            randomSlot= dungeon.Id;
-                }
-
-                partyUpdate.LfgInfos.Value.MyRandomSlot = randomSlot;
+                partyUpdate.LfgInfos.Value.MyRandomSlot = Global.LFGMgr.GetSelectedRandomDungeon(player.GetGUID());
 
                 partyUpdate.LfgInfos.Value.MyPartialClear = 0;
                 partyUpdate.LfgInfos.Value.MyGearDiff = 0.0f;
                 partyUpdate.LfgInfos.Value.MyFirstReward = false;
+
+                DungeonFinding.LfgReward reward = Global.LFGMgr.GetRandomDungeonReward(partyUpdate.LfgInfos.Value.MyRandomSlot, player.GetLevel());
+                if (reward != null)
+                {
+                    Quest quest = Global.ObjectMgr.GetQuestTemplate(reward.firstQuest);
+                    if (quest != null)
+                        partyUpdate.LfgInfos.Value.MyFirstReward = player.CanRewardQuest(quest, false);
+                }
 
                 partyUpdate.LfgInfos.Value.MyStrangerCount = 0;
                 partyUpdate.LfgInfos.Value.MyKickVoteCount = 0;
@@ -2676,9 +2673,11 @@ namespace Game.Groups
             {
                 ItemInstance itemInstance = new ItemInstance(lootItemInSlot);
                 BonusData bonusData = new BonusData(itemInstance);
+                if (!bonusData.CanDisenchant)
+                    return null;
 
                 ItemTemplate itemTemplate = Global.ObjectMgr.GetItemTemplate(itemid);
-                uint itemLevel = Item.GetItemLevel(itemTemplate, bonusData, player.GetLevel(), 0, lootItemInSlot.upgradeId, 0, 0, 0, false);
+                uint itemLevel = Item.GetItemLevel(itemTemplate, bonusData, player.GetLevel(), 0, 0, 0, 0, false, 0);
                 return Item.GetDisenchantLoot(itemTemplate, (uint)bonusData.Quality, itemLevel);
             }
 

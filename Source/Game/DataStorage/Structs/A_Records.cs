@@ -81,7 +81,7 @@ namespace Game.DataStorage
         public ushort UwZoneMusic;
         public byte ExplorationLevel;
         public ushort IntroSound;
-        public byte UwIntroSound;
+        public uint UwIntroSound;
         public byte FactionGroupMask;
         public float AmbientMultiplier;
         public byte MountFlags;
@@ -252,5 +252,107 @@ namespace Game.DataStorage
         public ushort FactionID;                                               // id of faction.dbc for player factions associated with city
         public byte DepositRate;
         public byte ConsignmentRate;
+    }
+
+    public sealed class AzeriteEmpoweredItemRecord
+    {
+        public uint Id;
+        public uint ItemID;
+        public uint AzeriteTierUnlockSetID;
+        public uint AzeritePowerSetID;
+    }
+
+    public sealed class AzeriteEssenceRecord
+    {
+        public string Name;
+        public string Description;
+        public uint Id;
+        public int SpecSetID;
+    }
+
+    public sealed class AzeriteEssencePowerRecord
+    {
+        public uint Id;
+        public string SourceAlliance;
+        public string SourceHorde;
+        public int AzeriteEssenceID;
+        public byte Tier;
+        public uint MajorPowerDescription;
+        public uint MinorPowerDescription;
+        public uint MajorPowerActual;
+        public uint MinorPowerActual;
+    }
+
+    public sealed class AzeriteItemRecord
+    {
+        public uint Id;
+        public uint ItemID;
+    }
+
+    public sealed class AzeriteItemMilestonePowerRecord
+    {
+        public uint Id;
+        public int RequiredLevel;
+        public int AzeritePowerID;
+        public int Type;
+        public int AutoUnlock;
+    }
+
+    public sealed class AzeriteKnowledgeMultiplierRecord
+    {
+        public uint Id;
+        public float Multiplier;
+    }
+
+    public sealed class AzeriteLevelInfoRecord
+    {
+        public uint Id;
+        public ulong BaseExperienceToNextLevel;
+        public ulong MinimumExperienceToNextLevel;
+        public uint ItemLevel;
+    }
+
+    public sealed class AzeritePowerRecord
+    {
+        public uint Id;
+        public uint SpellID;
+        public uint ItemBonusListID;
+        public int SpecSetID;
+        public int Flags;
+    }
+
+    public sealed class AzeritePowerSetMemberRecord
+    {
+        public uint Id;
+        public uint AzeritePowerSetID;
+        public int AzeritePowerID;
+        public int Class;
+        public int Tier;
+        public uint OrderIndex;
+    }
+
+    public sealed class AzeriteTierUnlockRecord
+    {
+        public uint Id;
+        public byte ItemCreationContext;
+        public byte Tier;
+        public byte AzeriteLevel;
+        public uint AzeriteTierUnlockSetID;
+    }
+
+    public sealed class AzeriteTierUnlockSetRecord
+    {
+        public uint Id;
+        public AzeriteTierUnlockSetFlags Flags;
+    }
+
+    public sealed class AzeriteUnlockMappingRecord
+    {
+        public uint Id;
+        public int ItemLevel;
+        public uint ItemBonusListHead;
+        public uint ItemBonusListShoulders;
+        public uint ItemBonusListChest;
+        public uint AzeriteUnlockMappingSetID;
     }
 }

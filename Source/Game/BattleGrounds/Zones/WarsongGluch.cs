@@ -703,15 +703,15 @@ namespace Game.BattleGrounds.Zones
                 return false;
             }
 
-            WorldSafeLocsRecord sg = CliDB.WorldSafeLocsStorage.LookupByKey(WSGGraveyards.MainAlliance);
-            if (sg == null || !AddSpiritGuide(WSGCreatureTypes.SpiritMainAlliance, sg.Loc.X, sg.Loc.Y, sg.Loc.Z, 3.124139f, TeamId.Alliance))
+            WorldSafeLocsEntry sg = Global.ObjectMgr.GetWorldSafeLoc(WSGGraveyards.MainAlliance);
+            if (sg == null || !AddSpiritGuide(WSGCreatureTypes.SpiritMainAlliance, sg.Loc.GetPositionX(), sg.Loc.GetPositionY(), sg.Loc.GetPositionZ(), 3.124139f, TeamId.Alliance))
             {
                 Log.outError(LogFilter.Sql, "BgWarsongGluch: Failed to spawn Alliance spirit guide! Battleground not created!");
                 return false;
             }
 
-            sg = CliDB.WorldSafeLocsStorage.LookupByKey(WSGGraveyards.MainHorde);
-            if (sg == null || !AddSpiritGuide(WSGCreatureTypes.SpiritMainHorde, sg.Loc.X, sg.Loc.Y, sg.Loc.Z, 3.193953f, TeamId.Horde))
+            sg = Global.ObjectMgr.GetWorldSafeLoc(WSGGraveyards.MainHorde);
+            if (sg == null || !AddSpiritGuide(WSGCreatureTypes.SpiritMainHorde, sg.Loc.GetPositionX(), sg.Loc.GetPositionY(), sg.Loc.GetPositionZ(), 3.193953f, TeamId.Horde))
             {
                 Log.outError(LogFilter.Sql, "BgWarsongGluch: Failed to spawn Horde spirit guide! Battleground not created!");
                 return false;
@@ -789,10 +789,10 @@ namespace Game.BattleGrounds.Zones
             switch (type)
             {
                 case ScoreType.FlagCaptures:                           // flags captured
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, 42);
+                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, WSObjectives.CaptureFlag);
                     break;
                 case ScoreType.FlagReturns:                            // flags returned
-                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, 44);
+                    player.UpdateCriteria(CriteriaTypes.BgObjectiveCapture, WSObjectives.ReturnFlag);
                     break;
                 default:
                     break;
@@ -800,7 +800,7 @@ namespace Game.BattleGrounds.Zones
             return true;
         }
 
-        public override WorldSafeLocsRecord GetClosestGraveYard(Player player)
+        public override WorldSafeLocsEntry GetClosestGraveYard(Player player)
         {
             //if status in progress, it returns main graveyards with spiritguides
             //else it will return the graveyard in the flagroom - this is especially good
@@ -810,22 +810,22 @@ namespace Game.BattleGrounds.Zones
             if (player.GetTeam() == Team.Alliance)
             {
                 if (GetStatus() == BattlegroundStatus.InProgress)
-                    return CliDB.WorldSafeLocsStorage.LookupByKey(WSGGraveyards.MainAlliance);
+                    return Global.ObjectMgr.GetWorldSafeLoc(WSGGraveyards.MainAlliance);
                 else
-                    return CliDB.WorldSafeLocsStorage.LookupByKey(WSGGraveyards.FlagRoomAlliance);
+                    return Global.ObjectMgr.GetWorldSafeLoc(WSGGraveyards.FlagRoomAlliance);
             }
             else
             {
                 if (GetStatus() == BattlegroundStatus.InProgress)
-                    return CliDB.WorldSafeLocsStorage.LookupByKey(WSGGraveyards.MainHorde);
+                    return Global.ObjectMgr.GetWorldSafeLoc(WSGGraveyards.MainHorde);
                 else
-                    return CliDB.WorldSafeLocsStorage.LookupByKey(WSGGraveyards.FlagRoomHorde);
+                    return Global.ObjectMgr.GetWorldSafeLoc(WSGGraveyards.FlagRoomHorde);
             }
         }
 
-        public override WorldSafeLocsRecord GetExploitTeleportLocation(Team team)
+        public override WorldSafeLocsEntry GetExploitTeleportLocation(Team team)
         {
-            return CliDB.WorldSafeLocsStorage.LookupByKey(team == Team.Alliance ? ExploitTeleportLocationAlliance : ExploitTeleportLocationHorde);
+            return Global.ObjectMgr.GetWorldSafeLoc(team == Team.Alliance ? ExploitTeleportLocationAlliance : ExploitTeleportLocationHorde);
         }
 
         public override void FillInitialWorldStates(InitWorldStates packet)
@@ -970,8 +970,8 @@ namespace Game.BattleGrounds.Zones
         {
             base.BuildPvPLogPlayerDataPacket(out playerData);
 
-            playerData.Stats.Add(FlagCaptures);
-            playerData.Stats.Add(FlagReturns);
+            playerData.Stats.Add(new PVPLogData.PVPMatchPlayerPVPStat(WSObjectives.CaptureFlag, FlagCaptures));
+            playerData.Stats.Add(new PVPLogData.PVPMatchPlayerPVPStat(WSObjectives.ReturnFlag, FlagReturns));
         }
 
         public override uint GetAttr1() { return FlagCaptures; }
@@ -1114,6 +1114,11 @@ namespace Game.BattleGrounds.Zones
         public const uint HordeFlagDropped = 9806;
         public const uint AllianceFlagReturned = 9808;
         public const uint HordeFlagReturned = 9809;
+    }
+    struct WSObjectives
+    {
+        public const int CaptureFlag = 42;
+        public const int ReturnFlag = 44;
     }
     #endregion
 }

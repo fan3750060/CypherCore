@@ -122,6 +122,10 @@ public class RealmManager : Singleton<RealmManager>
     // List of client builds for verbose version info in realmlist packet
     RealmBuildInfo[] ClientBuilds =
     {
+        new RealmBuildInfo(32722, 8, 2, 5, ' ' ),
+        new RealmBuildInfo(32638, 8, 2, 5, ' ' ),
+        new RealmBuildInfo(32580, 8, 2, 5, ' ' ),
+        new RealmBuildInfo(32494, 8, 2, 5, ' ' ),
         new RealmBuildInfo(28938, 8, 1, 5, ' ' ),
         new RealmBuildInfo(21355, 6, 2, 4, ' ' ),
         new RealmBuildInfo(20726, 6, 2, 3, ' ' ),

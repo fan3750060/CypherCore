@@ -3017,17 +3017,17 @@ namespace Game.Maps
             return Global.DB2Mgr.GetMapDifficultyData(GetId(), GetDifficultyID());
         }
 
-        public int GetDifficultyLootItemContext()
+        public ItemContext GetDifficultyLootItemContext()
         {
             MapDifficultyRecord mapDifficulty = GetMapDifficulty();
             if (mapDifficulty != null && mapDifficulty.ItemContext != 0)
-                return mapDifficulty.ItemContext;
+                return (ItemContext)mapDifficulty.ItemContext;
 
             DifficultyRecord difficulty = CliDB.DifficultyStorage.LookupByKey(GetDifficultyID());
             if (difficulty != null)
-                return difficulty.ItemContext;
+                return (ItemContext)difficulty.ItemContext;
 
-            return 0;
+            return ItemContext.None;
         }
 
         public uint GetId()
@@ -3434,7 +3434,7 @@ namespace Game.Maps
             // prepare static data
             ObjectGuid sourceGUID = source != null ? source.GetGUID() : ObjectGuid.Empty; //some script commands doesn't have source
             ObjectGuid targetGUID = target != null ? target.GetGUID() : ObjectGuid.Empty;
-            ObjectGuid ownerGUID = (source != null && source.GetTypeId() == TypeId.Item) ? ((Item)source).GetOwnerGUID() : ObjectGuid.Empty;
+            ObjectGuid ownerGUID = (source != null && source.IsTypeMask(TypeMask.Item)) ? ((Item)source).GetOwnerGUID() : ObjectGuid.Empty;
 
             // Schedule script execution for all scripts in the script map
             bool immedScript = false;
@@ -3468,7 +3468,7 @@ namespace Game.Maps
             // prepare static data
             ObjectGuid sourceGUID = source != null ? source.GetGUID() : ObjectGuid.Empty;
             ObjectGuid targetGUID = target != null ? target.GetGUID() : ObjectGuid.Empty;
-            ObjectGuid ownerGUID = (source != null && source.GetTypeId() == TypeId.Item) ? ((Item)source).GetOwnerGUID() : ObjectGuid.Empty;
+            ObjectGuid ownerGUID = (source != null && source.IsTypeMask(TypeMask.Item)) ? ((Item)source).GetOwnerGUID() : ObjectGuid.Empty;
 
             var sa = new ScriptAction();
             sa.sourceGUID = sourceGUID;
@@ -4320,7 +4320,7 @@ namespace Game.Maps
         List<Map> m_childTerrainMaps = new List<Map>(); // contains m_parentMap of maps that have MapEntry::ParentMapID == GetId()
         SortedMultiMap<long, ScriptAction> m_scriptSchedule = new SortedMultiMap<long, ScriptAction>();
 
-        BitArray marked_cells = new BitArray(MapConst.TotalCellsPerMap * MapConst.TotalCellsPerMap);
+        BitSet marked_cells = new BitSet(MapConst.TotalCellsPerMap * MapConst.TotalCellsPerMap);
         public Dictionary<uint, CreatureGroup> CreatureGroupHolder = new Dictionary<uint, CreatureGroup>();
         internal uint i_InstanceId;
         long i_gridExpiry;

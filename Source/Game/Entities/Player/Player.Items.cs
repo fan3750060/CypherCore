@@ -1238,7 +1238,7 @@ namespace Game.Entities
                 if (msg != InventoryResult.Ok)
                     break;
 
-                EquipNewItem(eDest, titem_id, true);
+                EquipNewItem(eDest, titem_id, ItemContext.None, true);
                 AutoUnequipOffhandIfNeed();
                 titem_amount--;
             }
@@ -1260,13 +1260,13 @@ namespace Game.Entities
             Log.outError(LogFilter.Player, "STORAGE: Can't equip or store initial item {0} for race {1} class {2}, error msg = {3}", titem_id, GetRace(), GetClass(), msg);
             return false;
         }
-        public Item StoreNewItem(List<ItemPosCount> pos, uint itemId, bool update, uint randomPropertyId = 0, List<ObjectGuid> allowedLooters = null, byte context = 0, List<uint> bonusListIDs = null, bool addToCollection = true)
+        public Item StoreNewItem(List<ItemPosCount> pos, uint itemId, bool update, uint randomPropertyId = 0, List<ObjectGuid> allowedLooters = null, ItemContext context = 0, List<uint> bonusListIDs = null, bool addToCollection = true)
         {
             uint count = 0;
             foreach (var itemPosCount in pos)
                 count += itemPosCount.count;
 
-            Item item = Item.CreateItem(itemId, count, this);
+            Item item = Item.CreateItem(itemId, count, context, this);
             if (item != null)
             {
                 ItemAddedQuestCheck(itemId, count);
@@ -1275,11 +1275,6 @@ namespace Game.Entities
 
                 item.AddItemFlag(ItemFieldFlags.NewItem);
 
-                uint upgradeID = Global.DB2Mgr.GetRulesetItemUpgrade(itemId);
-                if (upgradeID != 0)
-                    item.SetModifier(ItemModifier.UpgradeId, upgradeID);
-
-                item.SetContext(context);
                 item.SetBonuses(bonusListIDs);
 
                 item = StoreItem(pos, item, update);
@@ -1602,9 +1597,9 @@ namespace Game.Entities
             // not found req. item count and have unequippable items
             return res;
         }
-        Item EquipNewItem(ushort pos, uint item, bool update)
+        Item EquipNewItem(ushort pos, uint item, ItemContext context, bool update)
         {
-            Item pItem = Item.CreateItem(item, 1, this);
+            Item pItem = Item.CreateItem(item, 1, context, this);
             if (pItem != null)
             {
                 ItemAddedQuestCheck(item, 1);
@@ -1659,6 +1654,8 @@ namespace Game.Entities
                         }
                     }
                 }
+
+                pItem.AddItemFlag2(ItemFieldFlags2.Equipped);
 
                 if (IsInWorld && update)
                 {
@@ -1829,6 +1826,8 @@ namespace Game.Entities
                 byte slot = (byte)(pos & 255);
                 VisualizeItem(slot, pItem);
 
+                pItem.AddItemFlag2(ItemFieldFlags2.Equipped);
+
                 if (IsInWorld)
                 {
                     pItem.AddToWorld();
@@ -1938,6 +1937,7 @@ namespace Game.Entities
                             Item.RemoveItemsSetItem(this, pProto);
 
                         _ApplyItemMods(pItem, slot, false, update);
+                        pItem.RemoveItemFlag2(ItemFieldFlags2.Equipped);
 
                         // remove item dependent auras and casts (only weapon and armor slots)
                         if (slot < EquipmentSlot.End)
@@ -2513,7 +2513,7 @@ namespace Game.Entities
                 }
             }
 
-            Item it = bStore ? StoreNewItem(vDest, item, true, ItemEnchantmentManager.GenerateItemRandomBonusListId(item), null, 0, crItem.BonusListIDs, false) : EquipNewItem(uiDest, item, true);
+            Item it = bStore ? StoreNewItem(vDest, item, true, ItemEnchantmentManager.GenerateItemRandomBonusListId(item), null, ItemContext.Vendor, crItem.BonusListIDs, false) : EquipNewItem(uiDest, item, ItemContext.Vendor, true);
             if (it != null)
             {
                 uint new_count = pVendor.UpdateVendorItemCurrentCount(crItem, count);
@@ -2863,47 +2863,89 @@ namespace Game.Entities
 
             return null;
         }
-        public Item GetItemByEntry(uint entry)
+        public Item GetItemByEntry(uint entry, ItemSearchLocation where = ItemSearchLocation.Default)
         {
-            // in inventory
-            int inventoryEnd = InventorySlots.ItemStart + GetInventorySlotCount();
-            for (byte i = InventorySlots.ItemStart; i < inventoryEnd; ++i)
+            if (where.HasAnyFlag(ItemSearchLocation.InEquipment))
             {
-                Item pItem = GetItemByPos(InventorySlots.Bag0, i);
-                if (pItem != null)
-                    if (pItem.GetEntry() == entry)
-                        return pItem;
+                for (byte i = EquipmentSlot.Start; i < InventorySlots.BagEnd; ++i)
+                {
+                    Item pItem = GetItemByPos(InventorySlots.Bag0, i);
+                    if (pItem != null)
+                        if (pItem.GetEntry() == entry)
+                            return pItem;
+                }
             }
 
-            for (byte i = InventorySlots.BagStart; i < InventorySlots.BagEnd; ++i)
+            if (where.HasAnyFlag(ItemSearchLocation.InInventory))
             {
-                Bag pBag = GetBagByPos(i);
-                if (pBag != null)
-                    for (byte j = 0; j < pBag.GetBagSize(); ++j)
-                    {
-                        Item pItem = pBag.GetItemByPos(j);
-                        if (pItem != null)
+                int inventoryEnd = InventorySlots.ItemStart + GetInventorySlotCount();
+                for (byte i = InventorySlots.ItemStart; i < inventoryEnd; ++i)
+                {
+                    Item pItem = GetItemByPos(InventorySlots.Bag0, i);
+                    if (pItem != null)
+                        if (pItem.GetEntry() == entry)
+                            return pItem;
+                }
+
+                for (byte i = InventorySlots.BagStart; i < InventorySlots.BagEnd; ++i)
+                {
+                    Bag pBag = GetBagByPos(i);
+                    if (pBag != null)
+                        for (byte j = 0; j < pBag.GetBagSize(); ++j)
                         {
-                            if (pItem.GetEntry() == entry)
-                                return pItem;
+                            Item pItem = pBag.GetItemByPos(j);
+                            if (pItem != null)
+                            {
+                                if (pItem.GetEntry() == entry)
+                                    return pItem;
+                            }
+                        }
+                }
+
+                for (byte i = InventorySlots.ChildEquipmentStart; i < InventorySlots.ChildEquipmentEnd; ++i)
+                {
+                    Item pItem = GetItemByPos(InventorySlots.Bag0, i);
+                    if (pItem)
+                        if (pItem.GetEntry() == entry)
+                            return pItem;
+                }
+            }
+
+            if (where.HasAnyFlag(ItemSearchLocation.InBank))
+            {
+                for (byte i = InventorySlots.BankItemStart; i < InventorySlots.BankItemEnd; ++i)
+                {
+                    Item pItem = GetItemByPos(InventorySlots.Bag0, i);
+                    if (pItem != null)
+                        if (pItem.GetEntry() == entry)
+                            return pItem;
+                }
+
+                for (byte i = InventorySlots.BankBagStart; i < InventorySlots.BankBagEnd; ++i)
+                {
+                    Bag pBag = GetBagByPos(i);
+                    if (pBag != null)
+                    {
+                        for (byte j = 0; j < pBag.GetBagSize(); ++j)
+                        {
+                            Item pItem = pBag.GetItemByPos(j);
+                            if (pItem != null)
+                                if (pItem.GetEntry() == entry)
+                                    return pItem;
                         }
                     }
+                }
             }
 
-            for (byte i = EquipmentSlot.Start; i < InventorySlots.BagEnd; ++i)
+            if (where.HasAnyFlag(ItemSearchLocation.InReagentBank))
             {
-                Item pItem = GetItemByPos(InventorySlots.Bag0, i);
-                if (pItem != null)
-                    if (pItem.GetEntry() == entry)
-                        return pItem;
-            }
-
-            for (byte i = InventorySlots.ChildEquipmentStart; i < InventorySlots.ChildEquipmentEnd; ++i)
-            {
-                Item pItem = GetItemByPos(InventorySlots.Bag0, i);
-                if (pItem)
-                    if (pItem.GetEntry() == entry)
-                        return pItem;
+                for (byte i = InventorySlots.ReagentStart; i < InventorySlots.ReagentEnd; ++i)
+                {
+                    Item pItem = GetItemByPos(InventorySlots.Bag0, i);
+                    if (pItem != null)
+                        if (pItem.GetEntry() == entry)
+                            return pItem;
+                }
             }
 
             return null;
@@ -3835,13 +3877,13 @@ namespace Game.Entities
             return max_personal_rating;
         }
 
-        public void SendItemRetrievalMail(uint itemEntry, uint count)
+        public void SendItemRetrievalMail(uint itemEntry, uint count, ItemContext context)
         {
             MailSender sender = new MailSender(MailMessageType.Creature, 34337);
             MailDraft draft = new MailDraft("Recovered Item", "We recovered a lost item in the twisting nether and noted that it was yours.$B$BPlease find said object enclosed."); // This is the text used in Cataclysm, it probably wasn't changed.
             SQLTransaction trans = new SQLTransaction();
 
-            Item item = Item.CreateItem(itemEntry, count, null);
+            Item item = Item.CreateItem(itemEntry, count, context, null);
             if (item)
             {
                 item.SaveToDB(trans);
@@ -3952,6 +3994,7 @@ namespace Game.Entities
             if (updateItemAuras)
                 ApplyItemDependentAuras(item, apply);
             ApplyArtifactPowers(item, apply);
+            ApplyAzeritePowers(item, apply);
             ApplyEnchantment(item, apply);
 
             Log.outDebug(LogFilter.Player, "_ApplyItemMods complete.");
@@ -3964,33 +4007,9 @@ namespace Game.Entities
 
             uint itemLevel = item.GetItemLevel(this);
             float combatRatingMultiplier = 1.0f;
-            GtCombatRatingsMultByILvlRecord ratingMult = CliDB.CombatRatingsMultByILvlGameTable.GetRow(itemLevel);
+            GtGenericMultByILvlRecord ratingMult = CliDB.CombatRatingsMultByILvlGameTable.GetRow(itemLevel);
             if (ratingMult != null)
-            {
-                switch (proto.GetInventoryType())
-                {
-                    case InventoryType.Weapon:
-                    case InventoryType.Shield:
-                    case InventoryType.Ranged:
-                    case InventoryType.Weapon2Hand:
-                    case InventoryType.WeaponMainhand:
-                    case InventoryType.WeaponOffhand:
-                    case InventoryType.Holdable:
-                    case InventoryType.RangedRight:
-                        combatRatingMultiplier = ratingMult.WeaponMultiplier;
-                        break;
-                    case InventoryType.Trinket:
-                        combatRatingMultiplier = ratingMult.TrinketMultiplier;
-                        break;
-                    case InventoryType.Neck:
-                    case InventoryType.Finger:
-                        combatRatingMultiplier = ratingMult.JewelryMultiplier;
-                        break;
-                    default:
-                        combatRatingMultiplier = ratingMult.ArmorMultiplier;
-                        break;
-                }
-            }
+                combatRatingMultiplier = CliDB.GetIlvlStatMultiplier(ratingMult, proto.GetInventoryType());
 
             // req. check at equip, but allow use for extended range if range limit max level, set proper level
             for (byte i = 0; i < ItemConst.MaxStats; ++i)
@@ -4028,6 +4047,10 @@ namespace Game.Entities
                         //ApplyStatBuffMod(Stats.Spirit, MathFunctions.CalculatePct(val, GetModifierValue(UnitMods.StatSpirit, UnitModifierType.BasePCTExcludeCreate)), apply);
                         //break;
                     case ItemModType.Stamina:                          //modify stamina
+                        GtGenericMultByILvlRecord staminaMult = CliDB.StaminaMultByILvlGameTable.GetRow(itemLevel);
+                        if (staminaMult != null)
+                            val = (int)(val * CliDB.GetIlvlStatMultiplier(staminaMult, proto.GetInventoryType()));
+
                         HandleStatModifier(UnitMods.StatStamina, UnitModifierType.BaseValue, (float)val, apply);
                         ApplyStatBuffMod(Stats.Stamina, MathFunctions.CalculatePct(val, GetModifierValue(UnitMods.StatStamina, UnitModifierType.BasePCTExcludeCreate)), apply);
                         break;
@@ -4439,6 +4462,34 @@ namespace Game.Entities
                         continue;
 
                     _ApplyItemMods(m_items[i], i, apply);
+                }
+            }
+        }
+
+        void ApplyAllAzeriteItemMods(bool apply)
+        {
+            for (byte i = 0; i < InventorySlots.BagEnd; ++i)
+            {
+                if (m_items[i])
+                {
+                    if (!m_items[i].IsAzeriteItem() || m_items[i].IsBroken() || !CanUseAttackType(Player.GetAttackBySlot(i, m_items[i].GetTemplate().GetInventoryType())))
+                        continue;
+
+                    ApplyAzeritePowers(m_items[i], apply);
+                }
+            }
+        }
+
+        void ApplyAllAzeriteEmpoweredItemMods(bool apply)
+        {
+            for (byte i = 0; i < InventorySlots.BagEnd; ++i)
+            {
+                if (m_items[i])
+                {
+                    if (!m_items[i].IsAzeriteEmpoweredItem() || m_items[i].IsBroken() || !CanUseAttackType(Player.GetAttackBySlot(i, m_items[i].GetTemplate().GetInventoryType())))
+                        continue;
+
+                    ApplyAzeritePowers(m_items[i], apply);
                 }
             }
         }
@@ -5091,7 +5142,7 @@ namespace Game.Entities
         InventoryResult CanEquipNewItem(byte slot, out ushort dest, uint item, bool swap)
         {
             dest = 0;
-            Item pItem = Item.CreateItem(item, 1, this);
+            Item pItem = Item.CreateItem(item, 1, ItemContext.None, this);
             if (pItem != null)
             {
                 InventoryResult result = CanEquipItem(slot, out dest, pItem, swap);
@@ -5387,6 +5438,9 @@ namespace Game.Entities
         //Artifact
         void ApplyArtifactPowers(Item item, bool apply)
         {
+            if (item.IsArtifactDisabled())
+                return;
+
             foreach (ArtifactPower artifactPower in item.m_itemData.ArtifactPowers)
             {
                 byte rank = artifactPower.CurrentRankWithBonus;
@@ -5464,6 +5518,123 @@ namespace Game.Entities
                     SendPacket(unlearnedSpells);
                 }
             }
+        }
+
+        void ApplyAzeritePowers(Item item, bool apply)
+        {
+            AzeriteItem azeriteItem = item.ToAzeriteItem();
+            if (azeriteItem != null)
+            {
+                // milestone powers
+                foreach (uint azeriteItemMilestonePowerId in azeriteItem.m_azeriteItemData.UnlockedEssenceMilestones)
+                    ApplyAzeriteItemMilestonePower(azeriteItem, CliDB.AzeriteItemMilestonePowerStorage.LookupByKey(azeriteItemMilestonePowerId), apply);
+
+                // essences
+                SelectedAzeriteEssences selectedEssences = azeriteItem.GetSelectedAzeriteEssences();
+                if (selectedEssences != null)
+                {
+                    for (byte slot = 0; slot < SharedConst.MaxAzeriteEssenceSlot; ++slot)
+                        if (selectedEssences.AzeriteEssenceID[slot] != 0)
+                            ApplyAzeriteEssence(azeriteItem, selectedEssences.AzeriteEssenceID[slot], azeriteItem.GetEssenceRank(selectedEssences.AzeriteEssenceID[slot]),
+                                (AzeriteItemMilestoneType)Global.DB2Mgr.GetAzeriteItemMilestonePower(slot).Type == AzeriteItemMilestoneType.MajorEssence, apply);
+                }
+            }
+            else
+            {
+                AzeriteEmpoweredItem azeriteEmpoweredItem = item.ToAzeriteEmpoweredItem();
+                if (azeriteEmpoweredItem)
+                {
+                    if (!apply || GetItemByEntry(PlayerConst.ItemIdHeartOfAzeroth, ItemSearchLocation.InEquipment))
+                    {
+                        for (int i = 0; i < SharedConst.MaxAzeriteEmpoweredTier; ++i)
+                        {
+                            AzeritePowerRecord azeritePower = CliDB.AzeritePowerStorage.LookupByKey(azeriteEmpoweredItem.GetSelectedAzeritePower(i));
+                            if (azeritePower != null)
+                                ApplyAzeritePower(azeriteEmpoweredItem, azeritePower, apply);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ApplyAzeriteItemMilestonePower(AzeriteItem item, AzeriteItemMilestonePowerRecord azeriteItemMilestonePower, bool apply)
+        {
+            AzeriteItemMilestoneType type = (AzeriteItemMilestoneType)azeriteItemMilestonePower.Type;
+            if (type == AzeriteItemMilestoneType.BonusStamina)
+            {
+                AzeritePowerRecord azeritePower = CliDB.AzeritePowerStorage.LookupByKey(azeriteItemMilestonePower.AzeritePowerID);
+                if (azeritePower != null)
+                {
+                    if (apply)
+                        CastSpell(this, azeritePower.SpellID, true, item);
+                    else
+                        RemoveAurasDueToItemSpell(azeritePower.SpellID, item.GetGUID());
+                }
+            }
+        }
+
+        public void ApplyAzeriteEssence(AzeriteItem item, uint azeriteEssenceId, uint rank, bool major, bool apply)
+        {
+            for (uint currentRank = 1; currentRank <= rank; ++currentRank)
+            {
+                AzeriteEssencePowerRecord azeriteEssencePower = Global.DB2Mgr.GetAzeriteEssencePower(azeriteEssenceId, currentRank);
+                if (azeriteEssencePower != null)
+                {
+                    ApplyAzeriteEssencePower(item, azeriteEssencePower, major, apply);
+                    if (major && currentRank == 1)
+                    {
+                        if (apply)
+                            CastCustomSpell(PlayerConst.SpellIdHeartEssenceActionBarOverride, SpellValueMod.BasePoint0, (int)azeriteEssencePower.MajorPowerDescription, this, TriggerCastFlags.FullMask);
+                        else
+                            RemoveAurasDueToSpell(PlayerConst.SpellIdHeartEssenceActionBarOverride);
+                    }
+                }
+            }
+        }
+
+        void ApplyAzeriteEssencePower(AzeriteItem item, AzeriteEssencePowerRecord azeriteEssencePower, bool major, bool apply)
+        {
+            SpellInfo powerSpell = Global.SpellMgr.GetSpellInfo(azeriteEssencePower.MinorPowerDescription);
+            if (powerSpell != null)
+            {
+                if (apply)
+                    CastSpell(this, powerSpell, true, item);
+                else
+                    RemoveAurasDueToItemSpell(powerSpell.Id, item.GetGUID());
+            }
+
+            if (major)
+            {
+                powerSpell = Global.SpellMgr.GetSpellInfo(azeriteEssencePower.MajorPowerDescription);
+                if (powerSpell != null)
+                {
+                    if (powerSpell.IsPassive())
+                    {
+                        if (apply)
+                            CastSpell(this, powerSpell, true, item);
+                        else
+                            RemoveAurasDueToItemSpell(powerSpell.Id, item.GetGUID());
+                    }
+                    else
+                    {
+                        if (apply)
+                            LearnSpell(powerSpell.Id, true, 0, true);
+                        else
+                            RemoveSpell(powerSpell.Id, false, false, true);
+                    }
+                }
+            }
+        }
+
+        public void ApplyAzeritePower(AzeriteEmpoweredItem item, AzeritePowerRecord azeritePower, bool apply)
+        {
+            if (apply)
+            {
+                if (azeritePower.SpecSetID == 0 || Global.DB2Mgr.IsSpecSetMember(azeritePower.SpecSetID, GetPrimarySpecialization()))
+                    CastSpell(this, azeritePower.SpellID, true, item);
+            }
+            else
+                RemoveAurasDueToItemSpell(azeritePower.SpellID, item.GetGUID());
         }
 
         public bool HasItemOrGemWithIdEquipped(uint item, uint count, byte except_slot = ItemConst.NullSlot)
@@ -5976,11 +6147,11 @@ namespace Game.Entities
                 pItem.SetState(ItemUpdateState.Changed, this);
             }
         }
-        public void AutoStoreLoot(uint loot_id, LootStore store, bool broadcast = false) { AutoStoreLoot(ItemConst.NullBag, ItemConst.NullSlot, loot_id, store, broadcast); }
-        void AutoStoreLoot(byte bag, byte slot, uint loot_id, LootStore store, bool broadcast = false)
+        public void AutoStoreLoot(uint loot_id, LootStore store, ItemContext context = 0, bool broadcast = false) { AutoStoreLoot(ItemConst.NullBag, ItemConst.NullSlot, loot_id, store, context, broadcast); }
+        void AutoStoreLoot(byte bag, byte slot, uint loot_id, LootStore store, ItemContext context = 0, bool broadcast = false)
         {
             Loot loot = new Loot();
-            loot.FillLoot(loot_id, store, this, true);
+            loot.FillLoot(loot_id, store, this, true, false, LootModes.Default, context);
 
             uint max_slot = loot.GetMaxSlotInLootFor(this);
             for (uint i = 0; i < max_slot; ++i)
@@ -6262,7 +6433,7 @@ namespace Game.Entities
                         if (groupRules)
                             group.UpdateLooterGuid(go, true);
 
-                        loot.FillLoot(lootid, LootStorage.Gameobject, this, !groupRules, false, go.GetLootMode());
+                        loot.FillLoot(lootid, LootStorage.Gameobject, this, !groupRules, false, go.GetLootMode(), GetMap().GetDifficultyLootItemContext());
                         go.SetLootGenerationTime();
 
                         // get next RR player (for next loot)

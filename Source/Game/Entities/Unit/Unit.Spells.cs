@@ -33,16 +33,16 @@ namespace Game.Entities
 
 
         // function uses real base points (typically value - 1)
-        public int CalculateSpellDamage(Unit target, SpellInfo spellProto, uint effect_index, int? basePoints = null, int itemLevel = -1)
+        public int CalculateSpellDamage(Unit target, SpellInfo spellProto, uint effect_index, int? basePoints = null, uint castItemId = 0, int itemLevel = -1)
         {
             SpellEffectInfo effect = spellProto.GetEffect(GetMap().GetDifficultyID(), effect_index);
-            return effect != null ? effect.CalcValue(this, basePoints, target) : 0;
+            return effect != null ? effect.CalcValue(this, basePoints, target, castItemId, itemLevel) : 0;
         }
-        public int CalculateSpellDamage(Unit target, SpellInfo spellProto, uint effect_index, out float variance, int? basePoints = null, int itemLevel = -1)
+        public int CalculateSpellDamage(Unit target, SpellInfo spellProto, uint effect_index, out float variance, int? basePoints = null, uint castItemId = 0, int itemLevel = -1)
         {
             SpellEffectInfo effect = spellProto.GetEffect(GetMap().GetDifficultyID(), effect_index);
             variance = 0.0f;
-            return effect != null ? effect.CalcValue(out variance, this, basePoints, target, itemLevel) : 0;
+            return effect != null ? effect.CalcValue(out variance, this, basePoints, target, castItemId, itemLevel) : 0;
         }
 
         public int SpellBaseDamageBonusDone(SpellSchoolMask schoolMask)
@@ -1234,20 +1234,29 @@ namespace Game.Entities
 
         public virtual SpellInfo GetCastSpellInfo(SpellInfo spellInfo)
         {
-            var swaps = GetAuraEffectsByType(AuraType.OverrideActionbarSpells);
-            var swaps2 = GetAuraEffectsByType(AuraType.OverrideActionbarSpellsTriggered);
-            if (!swaps2.Empty())
-                swaps.AddRange(swaps2);
-
-            foreach (AuraEffect auraEffect in swaps)
+            SpellInfo findMatchingAuraEffectIn(AuraType type)
             {
-                if (auraEffect.GetMiscValue() == spellInfo.Id || auraEffect.IsAffectingSpell(spellInfo))
+                foreach (AuraEffect auraEffect in GetAuraEffectsByType(type))
                 {
-                    SpellInfo newInfo = Global.SpellMgr.GetSpellInfo((uint)auraEffect.GetAmount());
-                    if (newInfo != null)
-                        return newInfo;
+                    bool matches = auraEffect.GetMiscValue() != 0 ? auraEffect.GetMiscValue() == spellInfo.Id : auraEffect.IsAffectingSpell(spellInfo);
+                    if (matches)
+                    {
+                        SpellInfo info = Global.SpellMgr.GetSpellInfo((uint)auraEffect.GetAmount());
+                        if (info != null)
+                            return info;
+                    }
                 }
+
+                return null;
             }
+
+            SpellInfo newInfo = findMatchingAuraEffectIn(AuraType.OverrideActionbarSpells);
+            if (newInfo != null)
+                return newInfo;
+
+            newInfo = findMatchingAuraEffectIn(AuraType.OverrideActionbarSpellsTriggered);
+            if (newInfo != null)
+                return newInfo;
 
             return spellInfo;
         }
@@ -4142,7 +4151,7 @@ namespace Game.Entities
                 }
             }
         }
-        public Aura _TryStackingOrRefreshingExistingAura(SpellInfo newAura, uint effMask, Unit caster, int[] baseAmount = null, Item castItem = null, ObjectGuid casterGUID = default, bool resetPeriodicTimer = true, ObjectGuid castItemGuid = default, int castItemLevel = -1)
+        public Aura _TryStackingOrRefreshingExistingAura(SpellInfo newAura, uint effMask, Unit caster, int[] baseAmount = null, Item castItem = null, ObjectGuid casterGUID = default, bool resetPeriodicTimer = true, ObjectGuid castItemGuid = default, uint castItemId = 0, int castItemLevel = -1)
         {
             Cypher.Assert(!casterGUID.IsEmpty() || caster);
 
@@ -4157,6 +4166,7 @@ namespace Game.Entities
                 if (castItem != null)
                 {
                     castItemGuid = castItem.GetGUID();
+                    castItemId = castItem.GetEntry();
                     Player owner = castItem.GetOwner();
                     if (owner)
                         castItemLevel = (int)castItem.GetItemLevel(owner);
@@ -4197,6 +4207,7 @@ namespace Game.Entities
                     if (castItemGuid != foundAura.GetCastItemGUID())
                     {
                         foundAura.SetCastItemGUID(castItemGuid);
+                        foundAura.SetCastItemId(castItemId);
                         foundAura.SetCastItemLevel(castItemLevel);
                     }
 

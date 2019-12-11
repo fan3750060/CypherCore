@@ -100,6 +100,46 @@ namespace Framework.Database
             PrepareStatement(HotfixStatements.SEL_AUCTION_HOUSE, "SELECT ID, Name, FactionID, DepositRate, ConsignmentRate FROM auction_house ORDER BY ID DESC");
             PrepareStatement(HotfixStatements.SEL_AUCTION_HOUSE_LOCALE, "SELECT ID, Name_lang FROM auction_house_locale WHERE locale = ?");
 
+            // AzeriteEmpoweredItem.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_EMPOWERED_ITEM, "SELECT ID, ItemID, AzeriteTierUnlockSetID, AzeritePowerSetID FROM azerite_empowered_item ORDER BY ID DESC");
+
+            // AzeriteEssence.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_ESSENCE, "SELECT Name, Description, ID, SpecSetID FROM azerite_essence ORDER BY ID DESC");
+            PrepareStatement(HotfixStatements.SEL_AZERITE_ESSENCE_LOCALE, "SELECT ID, Name_lang, Description_lang FROM azerite_essence_locale WHERE locale = ?");
+
+            // AzeriteEssencePower.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_ESSENCE_POWER, "SELECT ID, SourceAlliance, SourceHorde, AzeriteEssenceID, Tier, MajorPowerDescription, " +
+                "MinorPowerDescription, MajorPowerActual, MinorPowerActual FROM azerite_essence_power ORDER BY ID DESC");
+            PrepareStatement(HotfixStatements.SEL_AZERITE_ESSENCE_POWER_LOCALE, "SELECT ID, SourceAlliance_lang, SourceHorde_lang FROM azerite_essence_power_locale WHERE locale = ?");
+
+            // AzeriteItem.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_ITEM, "SELECT ID, ItemID FROM azerite_item ORDER BY ID DESC");
+
+            // AzeriteItemMilestonePower.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_ITEM_MILESTONE_POWER, "SELECT ID, RequiredLevel, AzeritePowerID, Type, AutoUnlock FROM azerite_item_milestone_power ORDER BY ID DESC");
+
+            // AzeriteKnowledgeMultiplier.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_KNOWLEDGE_MULTIPLIER, "SELECT ID, Multiplier FROM azerite_knowledge_multiplier ORDER BY ID DESC");
+
+            // AzeriteLevelInfo.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_LEVEL_INFO, "SELECT ID, BaseExperienceToNextLevel, MinimumExperienceToNextLevel, ItemLevel FROM azerite_level_info ORDER BY ID DESC");
+
+            // AzeritePower.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_POWER, "SELECT ID, SpellID, ItemBonusListID, SpecSetID, Flags FROM azerite_power ORDER BY ID DESC");
+
+            // AzeritePowerSetMember.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_POWER_SET_MEMBER, "SELECT ID, AzeritePowerSetID, AzeritePowerID, Class, Tier, OrderIndex FROM azerite_power_set_member ORDER BY ID DESC");
+
+            // AzeriteTierUnlock.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_TIER_UNLOCK, "SELECT ID, ItemCreationContext, Tier, AzeriteLevel, AzeriteTierUnlockSetID FROM azerite_tier_unlock ORDER BY ID DESC");
+
+            // AzeriteTierUnlockSet.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_TIER_UNLOCK_SET, "SELECT ID, Flags FROM azerite_tier_unlock_set ORDER BY ID DESC");
+
+            // AzeriteUnlockMapping.db2
+            PrepareStatement(HotfixStatements.SEL_AZERITE_UNLOCK_MAPPING, "SELECT ID, ItemLevel, ItemBonusListHead, ItemBonusListShoulders, ItemBonusListChest, " +
+                "AzeriteUnlockMappingSetID FROM azerite_unlock_mapping ORDER BY ID DESC");
+
             // BankBagSlotPrices.db2
             PrepareStatement(HotfixStatements.SEL_BANK_BAG_SLOT_PRICES, "SELECT ID, Cost FROM bank_bag_slot_prices ORDER BY ID DESC");
 
@@ -447,8 +487,8 @@ namespace Framework.Database
                 "ItemGroupSoundsID FROM item ORDER BY ID DESC");
 
             // ItemAppearance.db2
-            PrepareStatement(HotfixStatements.SEL_ITEM_APPEARANCE, "SELECT ID, DisplayType, ItemDisplayInfoID, DefaultIconFileDataID, UiOrder FROM item_appearance" +        
-                " ORDER BY ID DESC");
+            PrepareStatement(HotfixStatements.SEL_ITEM_APPEARANCE, "SELECT ID, DisplayType, SubclassID, ItemDisplayInfoID, DefaultIconFileDataID, UiOrder" +
+                " FROM item_appearance ORDER BY ID DESC");
 
             // ItemArmorQuality.db2
             PrepareStatement(HotfixStatements.SEL_ITEM_ARMOR_QUALITY, "SELECT ID, Qualitymod1, Qualitymod2, Qualitymod3, Qualitymod4, Qualitymod5, Qualitymod6, " +        
@@ -569,10 +609,10 @@ namespace Framework.Database
                 "StatPercentageOfSocket9, StatPercentageOfSocket10, StatPercentEditor1, StatPercentEditor2, StatPercentEditor3, StatPercentEditor4, " +        
                 "StatPercentEditor5, StatPercentEditor6, StatPercentEditor7, StatPercentEditor8, StatPercentEditor9, StatPercentEditor10, Stackable, " +        
                 "MaxCount, RequiredAbility, SellPrice, BuyPrice, VendorStackCount, PriceVariance, PriceRandomValue, Flags1, Flags2, Flags3, Flags4, " +        
-                "FactionRelated, ItemNameDescriptionID, RequiredTransmogHoliday, RequiredHoliday, LimitCategory, GemProperties, SocketMatchEnchantmentId, " +        
-                "TotemCategoryID, InstanceBound, ZoneBound, ItemSet, LockID, StartQuestID, PageID, ItemDelay, ScalingStatDistributionID, MinFactionID, " +        
-                "RequiredSkillRank, RequiredSkill, ItemLevel, AllowableClass, ExpansionID, ArtifactID, SpellWeight, SpellWeightCategory, SocketType1, " +        
-                "SocketType2, SocketType3, SheatheType, Material, PageMaterialID, LanguageID, Bonding, DamageDamageType, StatModifierBonusStat1, " +        
+                "FactionRelated, ItemNameDescriptionID, RequiredTransmogHoliday, RequiredHoliday, LimitCategory, GemProperties, SocketMatchEnchantmentId, " +
+                "TotemCategoryID, InstanceBound, ZoneBound1, ZoneBound2, ItemSet, LockID, StartQuestID, PageID, ItemDelay, ScalingStatDistributionID, " +
+                "MinFactionID, RequiredSkillRank, RequiredSkill, ItemLevel, AllowableClass, ExpansionID, ArtifactID, SpellWeight, SpellWeightCategory, " +
+                "SocketType1, SocketType2, SocketType3, SheatheType, Material, PageMaterialID, LanguageID, Bonding, DamageDamageType, StatModifierBonusStat1, " +
                 "StatModifierBonusStat2, StatModifierBonusStat3, StatModifierBonusStat4, StatModifierBonusStat5, StatModifierBonusStat6, " +        
                 "StatModifierBonusStat7, StatModifierBonusStat8, StatModifierBonusStat9, StatModifierBonusStat10, ContainerSlots, MinReputation, " +        
                 "RequiredPVPMedal, RequiredPVPRank, RequiredLevel, InventoryType, OverallQualityID FROM item_sparse ORDER BY ID DESC");
@@ -585,10 +625,6 @@ namespace Framework.Database
 
             // ItemSpecOverride.db2
             PrepareStatement(HotfixStatements.SEL_ITEM_SPEC_OVERRIDE, "SELECT ID, SpecID, ItemID FROM item_spec_override ORDER BY ID DESC");
-
-            // ItemUpgrade.db2
-            PrepareStatement(HotfixStatements.SEL_ITEM_UPGRADE, "SELECT ID, ItemUpgradePathID, ItemLevelIncrement, PrerequisiteID, CurrencyType, CurrencyAmount" +        
-                " FROM item_upgrade ORDER BY ID DESC");
 
             // ItemXBonusTree.db2
             PrepareStatement(HotfixStatements.SEL_ITEM_X_BONUS_TREE, "SELECT ID, ItemBonusTreeID, ItemID FROM item_x_bonus_tree ORDER BY ID DESC");
@@ -712,7 +748,7 @@ namespace Framework.Database
             PrepareStatement(HotfixStatements.SEL_POWER_DISPLAY, "SELECT ID, GlobalStringBaseTag, ActualType, Red, Green, Blue FROM power_display ORDER BY ID DESC");
 
             // PowerType.db2
-            PrepareStatement(HotfixStatements.SEL_POWER_TYPE, "SELECT ID, NameGlobalStringTag, CostGlobalStringTag, PowerTypeEnum, MinPower, MaxBasePower, CenterPower, " +        
+            PrepareStatement(HotfixStatements.SEL_POWER_TYPE, "SELECT NameGlobalStringTag, CostGlobalStringTag, ID, PowerTypeEnum, MinPower, MaxBasePower, CenterPower, " +
                 "DefaultPower, DisplayModifier, RegenInterruptTimeMS, RegenPeace, RegenCombat, Flags FROM power_type ORDER BY ID DESC");
 
             // PrestigeLevelInfo.db2
@@ -775,9 +811,6 @@ namespace Framework.Database
             // RewardPackXItem.db2
             PrepareStatement(HotfixStatements.SEL_REWARD_PACK_X_ITEM, "SELECT ID, ItemID, ItemQuantity, RewardPackID FROM reward_pack_x_item ORDER BY ID DESC");
 
-            // RulesetItemUpgrade.db2
-            PrepareStatement(HotfixStatements.SEL_RULESET_ITEM_UPGRADE, "SELECT ID, ItemID, ItemUpgradeID FROM ruleset_item_upgrade ORDER BY ID DESC");
-
             // ScalingStatDistribution.db2
             PrepareStatement(HotfixStatements.SEL_SCALING_STAT_DISTRIBUTION, "SELECT ID, PlayerLevelToItemLevelCurveID, MinLevel, MaxLevel" +        
                 " FROM scaling_stat_distribution ORDER BY ID DESC");
@@ -828,6 +861,9 @@ namespace Framework.Database
                 " FROM specialization_spells ORDER BY ID DESC");
             PrepareStatement(HotfixStatements.SEL_SPECIALIZATION_SPELLS_LOCALE, "SELECT ID, Description_lang FROM specialization_spells_locale WHERE locale = ?");
 
+            // SpecSetMember.db2
+            PrepareStatement(HotfixStatements.SEL_SPEC_SET_MEMBER, "SELECT ID, ChrSpecializationID, SpecSetID FROM spec_set_member ORDER BY ID DESC");
+
             // SpellAuraOptions.db2
             PrepareStatement(HotfixStatements.SEL_SPELL_AURA_OPTIONS, "SELECT ID, DifficultyID, CumulativeAura, ProcCategoryRecovery, ProcChance, ProcCharges, " +        
                 "SpellProcsPerMinuteID, ProcTypeMask1, ProcTypeMask2, SpellID FROM spell_aura_options ORDER BY ID DESC");
@@ -865,7 +901,7 @@ namespace Framework.Database
             PrepareStatement(HotfixStatements.SEL_SPELL_DURATION, "SELECT ID, Duration, DurationPerLevel, MaxDuration FROM spell_duration ORDER BY ID DESC");
 
             // SpellEffect.db2
-            PrepareStatement(HotfixStatements.SEL_SPELL_EFFECT, "SELECT ID, DifficultyID, EffectIndex, Effect, EffectAmplitude, EffectAttributes, EffectAura, " +        
+            PrepareStatement(HotfixStatements.SEL_SPELL_EFFECT, "SELECT ID, EffectAura, DifficultyID, EffectIndex, Effect, EffectAmplitude, EffectAttributes, " +
                 "EffectAuraPeriod, EffectBonusCoefficient, EffectChainAmplitude, EffectChainTargets, EffectItemType, EffectMechanic, EffectPointsPerResource, " +        
                 "EffectPosFacing, EffectRealPointsPerLevel, EffectTriggerSpell, BonusCoefficientFromAP, PvpMultiplier, Coefficient, Variance, " +        
                 "ResourceCoefficient, GroupSizeBasePointsCoefficient, EffectBasePoints, EffectMiscValue1, EffectMiscValue2, EffectRadiusIndex1, " +        
@@ -905,9 +941,9 @@ namespace Framework.Database
                 " FROM spell_levels ORDER BY ID DESC");
 
             // SpellMisc.db2
-            PrepareStatement(HotfixStatements.SEL_SPELL_MISC, "SELECT ID, DifficultyID, CastingTimeIndex, DurationIndex, RangeIndex, SchoolMask, Speed, LaunchDelay, " +        
-                "MinDuration, SpellIconFileDataID, ActiveIconFileDataID, ContentTuningID, Attributes1, Attributes2, Attributes3, Attributes4, Attributes5, " +        
-                "Attributes6, Attributes7, Attributes8, Attributes9, Attributes10, Attributes11, Attributes12, Attributes13, Attributes14, SpellID" +        
+            PrepareStatement(HotfixStatements.SEL_SPELL_MISC, "SELECT ID, Attributes1, Attributes2, Attributes3, Attributes4, Attributes5, Attributes6, Attributes7, " +
+                "Attributes8, Attributes9, Attributes10, Attributes11, Attributes12, Attributes13, Attributes14, DifficultyID, CastingTimeIndex, " +
+                "DurationIndex, RangeIndex, SchoolMask, Speed, LaunchDelay, MinDuration, SpellIconFileDataID, ActiveIconFileDataID, ContentTuningID, SpellID" +
                 " FROM spell_misc ORDER BY ID DESC");
 
             // SpellName.db2
@@ -1009,8 +1045,8 @@ namespace Framework.Database
             PrepareStatement(HotfixStatements.SEL_TRANSMOG_HOLIDAY, "SELECT ID, RequiredTransmogHoliday FROM transmog_holiday ORDER BY ID DESC");
 
             // TransmogSet.db2
-            PrepareStatement(HotfixStatements.SEL_TRANSMOG_SET, "SELECT Name, ID, ClassMask, TrackingQuestID, Flags, TransmogSetGroupID, ItemNameDescriptionID, " +        
-                "ParentTransmogSetID, Unknown810, ExpansionID, PatchID, UiOrder FROM transmog_set ORDER BY ID DESC");
+            PrepareStatement(HotfixStatements.SEL_TRANSMOG_SET, "SELECT Name, ID, ClassMask, TrackingQuestID, Flags, TransmogSetGroupID, ItemNameDescriptionID, " +
+                "ParentTransmogSetID, Unknown810, ExpansionID, PatchID, UiOrder, PlayerConditionID FROM transmog_set ORDER BY ID DESC");
             PrepareStatement(HotfixStatements.SEL_TRANSMOG_SET_LOCALE, "SELECT ID, Name_lang FROM transmog_set_locale WHERE locale = ?");
 
             // TransmogSetGroup.db2
@@ -1081,10 +1117,6 @@ namespace Framework.Database
             PrepareStatement(HotfixStatements.SEL_WORLD_MAP_OVERLAY, "SELECT ID, UiMapArtID, TextureWidth, TextureHeight, OffsetX, OffsetY, HitRectTop, HitRectBottom, " +        
                 "HitRectLeft, HitRectRight, PlayerConditionID, Flags, AreaID1, AreaID2, AreaID3, AreaID4 FROM world_map_overlay ORDER BY ID DESC");
 
-            // WorldSafeLocs.db2
-            PrepareStatement(HotfixStatements.SEL_WORLD_SAFE_LOCS, "SELECT ID, AreaName, LocX, LocY, LocZ, MapID, Facing FROM world_safe_locs ORDER BY ID DESC");
-            PrepareStatement(HotfixStatements.SEL_WORLD_SAFE_LOCS_LOCALE, "SELECT ID, AreaName_lang FROM world_safe_locs_locale WHERE locale = ?");
-
             // WorldStateExpression.db2
             PrepareStatement(HotfixStatements.SEL_WORLD_STATE_EXPRESSION, "SELECT ID, Expression FROM world_state_expression ORDER BY ID DESC");
         }
@@ -1137,6 +1169,32 @@ namespace Framework.Database
 
         SEL_AUCTION_HOUSE,
         SEL_AUCTION_HOUSE_LOCALE,
+
+        SEL_AZERITE_EMPOWERED_ITEM,
+
+        SEL_AZERITE_ESSENCE,
+        SEL_AZERITE_ESSENCE_LOCALE,
+
+        SEL_AZERITE_ESSENCE_POWER,
+        SEL_AZERITE_ESSENCE_POWER_LOCALE,
+
+        SEL_AZERITE_ITEM,
+
+        SEL_AZERITE_ITEM_MILESTONE_POWER,
+
+        SEL_AZERITE_KNOWLEDGE_MULTIPLIER,
+
+        SEL_AZERITE_LEVEL_INFO,
+
+        SEL_AZERITE_POWER,
+
+        SEL_AZERITE_POWER_SET_MEMBER,
+
+        SEL_AZERITE_TIER_UNLOCK,
+
+        SEL_AZERITE_TIER_UNLOCK_SET,
+
+        SEL_AZERITE_UNLOCK_MAPPING,
 
         SEL_BANK_BAG_SLOT_PRICES,
 
@@ -1380,8 +1438,6 @@ namespace Framework.Database
 
         SEL_ITEM_SPEC_OVERRIDE,
 
-        SEL_ITEM_UPGRADE,
-
         SEL_ITEM_X_BONUS_TREE,
 
         SEL_KEYCHAIN,
@@ -1475,8 +1531,6 @@ namespace Framework.Database
 
         SEL_REWARD_PACK_X_ITEM,
 
-        SEL_RULESET_ITEM_UPGRADE,
-
         SEL_SCALING_STAT_DISTRIBUTION,
 
         SEL_SCENARIO,
@@ -1504,6 +1558,8 @@ namespace Framework.Database
 
         SEL_SPECIALIZATION_SPELLS,
         SEL_SPECIALIZATION_SPELLS_LOCALE,
+
+        SEL_SPEC_SET_MEMBER,
 
         SEL_SPELL_AURA_OPTIONS,
 
@@ -1633,9 +1689,6 @@ namespace Framework.Database
         SEL_WORLD_EFFECT,
 
         SEL_WORLD_MAP_OVERLAY,
-
-        SEL_WORLD_SAFE_LOCS,
-        SEL_WORLD_SAFE_LOCS_LOCALE,
 
         SEL_WORLD_STATE_EXPRESSION,
 

@@ -1042,7 +1042,7 @@ namespace Game.Spells
             }
         }
 
-        public void DoCreateItem(uint i, uint itemtype, byte context = 0, List<uint> bonusListIds = null)
+        public void DoCreateItem(uint i, uint itemtype, ItemContext context = 0, List<uint> bonusListIds = null)
         {
             if (unitTarget == null || !unitTarget.IsTypeId(TypeId.Player))
                 return;
@@ -1055,26 +1055,6 @@ namespace Game.Spells
             {
                 player.SendEquipError(InventoryResult.ItemNotFound);
                 return;
-            }
-
-            // bg reward have some special in code work
-            BattlegroundTypeId bgType = 0;
-            switch ((BattlegroundMarks)m_spellInfo.Id)
-            {
-                case BattlegroundMarks.SpellAvMarkWinner:
-                case BattlegroundMarks.SpellAvMarkLoser:
-                    bgType = BattlegroundTypeId.AV;
-                    break;
-                case BattlegroundMarks.SpellWsMarkWinner:
-                case BattlegroundMarks.SpellWsMarkLoser:
-                    bgType = BattlegroundTypeId.WS;
-                    break;
-                case BattlegroundMarks.SpellAbMarkWinner:
-                case BattlegroundMarks.SpellAbMarkLoser:
-                    bgType = BattlegroundTypeId.AB;
-                    break;
-                default:
-                    break;
             }
 
             uint num_to_add = (uint)damage;
@@ -1146,7 +1126,7 @@ namespace Game.Spells
                     pItem.SetCreator(player.GetGUID());
 
                 // send info to the client
-                player.SendNewItem(pItem, num_to_add, true, bgType == 0);
+                player.SendNewItem(pItem, num_to_add, true, true);
 
                 if (pItem.GetQuality() > ItemQuality.Epic || (pItem.GetQuality() == ItemQuality.Epic && pItem.GetItemLevel(player) >= GuildConst.MinNewsItemLevel))
                 {
@@ -1156,8 +1136,7 @@ namespace Game.Spells
                 }
 
                 // we succeeded in creating at least one item, so a levelup is possible
-                if (bgType == 0)
-                    player.UpdateCraftSkill(m_spellInfo.Id);
+                player.UpdateCraftSkill(m_spellInfo.Id);
             }
         }
 
@@ -1167,7 +1146,7 @@ namespace Game.Spells
             if (effectHandleMode != SpellEffectHandleMode.HitTarget)
                 return;
 
-            DoCreateItem(effIndex, effectInfo.ItemType);
+            DoCreateItem(effIndex, effectInfo.ItemType, m_spellInfo.HasAttribute(SpellAttr0.Tradespell) ? ItemContext.TradeSkill : ItemContext.None);
             ExecuteLogEffectCreateItem(effIndex, effectInfo.ItemType);
         }
 
@@ -1183,9 +1162,10 @@ namespace Game.Spells
             Player player = unitTarget.ToPlayer();
 
             uint item_id = effectInfo.ItemType;
+            ItemContext context = m_spellInfo.HasAttribute(SpellAttr0.Tradespell) ? ItemContext.TradeSkill : ItemContext.None;
 
             if (item_id != 0)
-                DoCreateItem(effIndex, item_id);
+                DoCreateItem(effIndex, item_id, context);
 
             // special case: fake item replaced by generate using spell_loot_template
             if (m_spellInfo.IsLootCrafting())
@@ -1200,10 +1180,10 @@ namespace Game.Spells
                     player.DestroyItemCount(item_id, count, true);
 
                     // create some random items
-                    player.AutoStoreLoot(m_spellInfo.Id, LootStorage.Spell);
+                    player.AutoStoreLoot(m_spellInfo.Id, LootStorage.Spell, context);
                 }
                 else
-                    player.AutoStoreLoot(m_spellInfo.Id, LootStorage.Spell);    // create some random items
+                    player.AutoStoreLoot(m_spellInfo.Id, LootStorage.Spell, context);    // create some random items
 
                 player.UpdateCraftSkill(m_spellInfo.Id);
             }
@@ -1221,7 +1201,7 @@ namespace Game.Spells
             Player player = unitTarget.ToPlayer();
 
             // create some random items
-            player.AutoStoreLoot(m_spellInfo.Id, LootStorage.Spell);
+            player.AutoStoreLoot(m_spellInfo.Id, LootStorage.Spell, m_spellInfo.HasAttribute(SpellAttr0.Tradespell) ? ItemContext.TradeSkill : ItemContext.None);
             // @todo ExecuteLogEffectCreateItem(i, GetEffect(i].ItemType);
         }
 
@@ -1243,7 +1223,7 @@ namespace Game.Spells
                 if (!dynObj.CreateDynamicObject(caster.GetMap().GenerateLowGuid(HighGuid.DynamicObject), caster, m_spellInfo, destTarget, radius, DynamicObjectType.AreaSpell, m_SpellVisual))
                     return;
 
-                Aura aura = Aura.TryCreate(m_spellInfo, m_castId, SpellConst.MaxEffectMask, dynObj, caster, m_spellValue.EffectBasePoints, null, ObjectGuid.Empty, ObjectGuid.Empty, m_castItemLevel);
+                Aura aura = Aura.TryCreate(m_spellInfo, m_castId, SpellConst.MaxEffectMask, dynObj, caster, m_spellValue.EffectBasePoints, null, ObjectGuid.Empty, ObjectGuid.Empty, m_castItemEntry, m_castItemLevel);
                 if (aura != null)
                 {
                     m_spellAura = aura;
@@ -1532,7 +1512,7 @@ namespace Game.Spells
 
             ushort pos = m_CastItem.GetPos();
 
-            Item pNewItem = Item.CreateItem(newitemid, 1, player);
+            Item pNewItem = Item.CreateItem(newitemid, 1, m_CastItem.GetContext(), player);
             if (pNewItem == null)
                 return;
 
@@ -2133,7 +2113,8 @@ namespace Game.Spells
                 player.DestroyItemCount(itemTarget, ref count, true);
                 unitTarget = player;
                 // and add a scroll
-                DoCreateItem(effIndex, effectInfo.ItemType);
+                damage = 1;
+                DoCreateItem(effIndex, effectInfo.ItemType, m_spellInfo.HasAttribute(SpellAttr0.Tradespell) ? ItemContext.TradeSkill : ItemContext.None);
                 itemTarget = null;
                 m_targets.SetItemTarget(null);
             }
@@ -5518,7 +5499,7 @@ namespace Game.Spells
             List<uint> bonusList = new List<uint>();
             bonusList.Add(collectionMgr.GetHeirloomBonus(m_misc.Data0));
 
-            DoCreateItem(effIndex, m_misc.Data0, 0, bonusList);
+            DoCreateItem(effIndex, m_misc.Data0, ItemContext.None, bonusList);
             ExecuteLogEffectCreateItem(effIndex, m_misc.Data0);
         }
 
@@ -5767,6 +5748,47 @@ namespace Game.Spells
                 return;
 
             unitTarget.ToPlayer().GetSession().GetCollectionMgr().AddTransmogSet((uint)effectInfo.MiscValue);
+        }
+
+        [SpellEffectHandler(SpellEffectName.LearnAzeriteEssencePower)]
+        void EffectLearnAzeriteEssencePower(uint effIndex)
+        {
+            if (effectHandleMode != SpellEffectHandleMode.HitTarget)
+                return;
+
+            Player playerTarget = unitTarget != null ? unitTarget.ToPlayer() : null;
+            if (!playerTarget)
+                return;
+
+            Item heartOfAzeroth = playerTarget.GetItemByEntry(PlayerConst.ItemIdHeartOfAzeroth, ItemSearchLocation.Everywhere);
+            if (heartOfAzeroth == null)
+                return;
+
+            AzeriteItem azeriteItem = heartOfAzeroth.ToAzeriteItem();
+            if (azeriteItem == null)
+                return;
+
+            // remove old rank and apply new one
+            if (azeriteItem.IsEquipped())
+            {
+                SelectedAzeriteEssences selectedEssences = azeriteItem.GetSelectedAzeriteEssences();
+                if (selectedEssences != null)
+                {
+                    for (int slot = 0; slot < SharedConst.MaxAzeriteEssenceSlot; ++slot)
+                    {
+                        if (selectedEssences.AzeriteEssenceID[slot] == effectInfo.MiscValue)
+                        {
+                            bool major = (AzeriteItemMilestoneType)Global.DB2Mgr.GetAzeriteItemMilestonePower(slot).Type == AzeriteItemMilestoneType.MajorEssence;
+                            playerTarget.ApplyAzeriteEssence(azeriteItem, (uint)effectInfo.MiscValue, SharedConst.MaxAzeriteEssenceRank, major, false);
+                            playerTarget.ApplyAzeriteEssence(azeriteItem, (uint)effectInfo.MiscValue, (uint)effectInfo.MiscValueB, major, false);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            azeriteItem.SetEssenceRank((uint)effectInfo.MiscValue, (uint)effectInfo.MiscValueB);
+            azeriteItem.SetState(ItemUpdateState.Changed, playerTarget);
         }
     }
 

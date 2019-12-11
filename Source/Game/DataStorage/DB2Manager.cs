@@ -59,9 +59,50 @@ namespace Game.DataStorage
             CliDB.ArtifactPowerLinkStorage.Clear();
 
             foreach (ArtifactPowerRankRecord artifactPowerRank in CliDB.ArtifactPowerRankStorage.Values)
-                _artifactPowerRanks[Tuple.Create((uint)artifactPowerRank.ArtifactPowerID, artifactPowerRank.RankIndex)] = artifactPowerRank;
+                _artifactPowerRanks[Tuple.Create(artifactPowerRank.ArtifactPowerID, artifactPowerRank.RankIndex)] = artifactPowerRank;
 
             CliDB.ArtifactPowerRankStorage.Clear();
+
+            foreach (AzeriteEmpoweredItemRecord azeriteEmpoweredItem in CliDB.AzeriteEmpoweredItemStorage.Values)
+                _azeriteEmpoweredItems[azeriteEmpoweredItem.ItemID] = azeriteEmpoweredItem;
+
+            foreach (AzeriteEssencePowerRecord azeriteEssencePower in CliDB.AzeriteEssencePowerStorage.Values)
+                _azeriteEssencePowersByIdAndRank[((uint)azeriteEssencePower.AzeriteEssenceID, (uint)azeriteEssencePower.Tier)] = azeriteEssencePower;
+
+            foreach (AzeriteItemMilestonePowerRecord azeriteItemMilestonePower in CliDB.AzeriteItemMilestonePowerStorage.Values)
+                _azeriteItemMilestonePowers.Add(azeriteItemMilestonePower);
+
+            _azeriteItemMilestonePowers = _azeriteItemMilestonePowers.OrderBy(p => p.RequiredLevel).ToList();
+
+            uint azeriteEssenceSlot = 0;
+            foreach (AzeriteItemMilestonePowerRecord azeriteItemMilestonePower in _azeriteItemMilestonePowers)
+            {
+                AzeriteItemMilestoneType type = (AzeriteItemMilestoneType)azeriteItemMilestonePower.Type;
+                if (type == AzeriteItemMilestoneType.MajorEssence || type == AzeriteItemMilestoneType.MinorEssence)
+                {
+                    //ASSERT(azeriteEssenceSlot < MAX_AZERITE_ESSENCE_SLOT);
+                    _azeriteItemMilestonePowerByEssenceSlot[azeriteEssenceSlot] = azeriteItemMilestonePower;
+                    ++azeriteEssenceSlot;
+                }
+            }
+
+            foreach (AzeritePowerSetMemberRecord azeritePowerSetMember in CliDB.AzeritePowerSetMemberStorage.Values)
+                if (CliDB.AzeritePowerStorage.ContainsKey(azeritePowerSetMember.AzeritePowerID))
+                    _azeritePowers.Add(azeritePowerSetMember.AzeritePowerSetID, azeritePowerSetMember);
+
+            foreach (AzeriteTierUnlockRecord azeriteTierUnlock in CliDB.AzeriteTierUnlockStorage.Values)
+            {
+                var key = (azeriteTierUnlock.AzeriteTierUnlockSetID, (ItemContext)azeriteTierUnlock.ItemCreationContext);
+
+                if (!_azeriteTierUnlockLevels.ContainsKey(key))
+                    _azeriteTierUnlockLevels[key] = new byte[SharedConst.MaxAzeriteEmpoweredTier];
+
+                _azeriteTierUnlockLevels[key][azeriteTierUnlock.Tier] = azeriteTierUnlock.AzeriteLevel;
+            }
+
+            MultiMap<uint, AzeriteUnlockMappingRecord> azeriteUnlockMappings = new MultiMap<uint, AzeriteUnlockMappingRecord>();
+            foreach (AzeriteUnlockMappingRecord azeriteUnlockMapping in CliDB.AzeriteUnlockMappingStorage.Values)
+                azeriteUnlockMappings.Add(azeriteUnlockMapping.AzeriteUnlockMappingSetID, azeriteUnlockMapping);
 
             foreach (CharacterFacialHairStylesRecord characterFacialStyle in CliDB.CharacterFacialHairStylesStorage.Values)
                 _characterFacialHairStyles.Add(Tuple.Create(characterFacialStyle.RaceID, characterFacialStyle.SexID, (uint)characterFacialStyle.VariationID));
@@ -266,6 +307,9 @@ namespace Game.DataStorage
 
             CliDB.ItemXBonusTreeStorage.Clear();
 
+            foreach (var pair in _azeriteEmpoweredItems)
+                LoadAzeriteEmpoweredItemUnlockMappings(azeriteUnlockMappings, pair.Key);
+
             foreach (MapDifficultyRecord entry in CliDB.MapDifficultyStorage.Values)
             {
                 if (!_mapDifficulties.ContainsKey(entry.MapID))
@@ -397,11 +441,6 @@ namespace Game.DataStorage
 
             CliDB.RewardPackXItemStorage.Clear();
 
-            foreach (RulesetItemUpgradeRecord rulesetItemUpgrade in CliDB.RulesetItemUpgradeStorage.Values)
-                _rulesetItemUpgrade[rulesetItemUpgrade.ItemID] = rulesetItemUpgrade.ItemUpgradeID;
-
-            CliDB.RulesetItemUpgradeStorage.Clear();
-
             foreach (SkillLineRecord skill in CliDB.SkillLineStorage.Values)
             {
                 if (skill.ParentSkillLineID != 0)
@@ -421,6 +460,9 @@ namespace Game.DataStorage
                 _specializationSpellsBySpec.Add(specSpells.SpecID, specSpells);
 
             CliDB.SpecializationSpellsStorage.Clear();
+
+            foreach (SpecSetMemberRecord specSetMember in CliDB.SpecSetMemberStorage.Values)
+                _specsBySpecSet.Add(Tuple.Create((int)specSetMember.SpecSetID, (uint)specSetMember.ChrSpecializationID));
 
             foreach (SpellClassOptionsRecord classOption in CliDB.SpellClassOptionsStorage.Values)
                 _spellFamilyNames.Add(classOption.SpellClassSet);
@@ -725,6 +767,59 @@ namespace Game.DataStorage
         public ArtifactPowerRankRecord GetArtifactPowerRank(uint artifactPowerId, byte rank)
         {
             return _artifactPowerRanks.LookupByKey(Tuple.Create(artifactPowerId, rank));
+        }
+
+        public AzeriteEmpoweredItemRecord GetAzeriteEmpoweredItem(uint itemId)
+        {
+            return _azeriteEmpoweredItems.LookupByKey(itemId);
+        }
+
+        public bool IsAzeriteItem(uint itemId)
+        {
+            return CliDB.AzeriteItemStorage.Any(pair => pair.Value.ItemID == itemId);
+        }
+
+        public AzeriteEssencePowerRecord GetAzeriteEssencePower(uint azeriteEssenceId, uint rank)
+        {
+            return _azeriteEssencePowersByIdAndRank.LookupByKey((azeriteEssenceId, rank));
+        }
+
+        public List<AzeriteItemMilestonePowerRecord> GetAzeriteItemMilestonePowers()
+        {
+            return _azeriteItemMilestonePowers;
+        }
+
+        public AzeriteItemMilestonePowerRecord GetAzeriteItemMilestonePower(int slot)
+        {
+            //ASSERT(slot < MAX_AZERITE_ESSENCE_SLOT, "Slot %u must be lower than MAX_AZERITE_ESSENCE_SLOT (%u)", uint32(slot), MAX_AZERITE_ESSENCE_SLOT);
+            return _azeriteItemMilestonePowerByEssenceSlot[slot];
+        }
+
+        public List<AzeritePowerSetMemberRecord> GetAzeritePowers(uint itemId)
+        {
+            AzeriteEmpoweredItemRecord azeriteEmpoweredItem = GetAzeriteEmpoweredItem(itemId);
+            if (azeriteEmpoweredItem != null)
+                return _azeritePowers.LookupByKey(azeriteEmpoweredItem.AzeritePowerSetID);
+
+            return null;
+        }
+
+        public uint GetRequiredAzeriteLevelForAzeritePowerTier(uint azeriteUnlockSetId, ItemContext context, uint tier)
+        {
+            //ASSERT(tier < MAX_AZERITE_EMPOWERED_TIER);
+            var levels = _azeriteTierUnlockLevels.LookupByKey((azeriteUnlockSetId, context));
+            if (levels != null)
+                return levels[tier];
+
+            AzeriteTierUnlockSetRecord azeriteTierUnlockSet = CliDB.AzeriteTierUnlockSetStorage.LookupByKey(azeriteUnlockSetId);
+            if (azeriteTierUnlockSet != null && azeriteTierUnlockSet.Flags.HasAnyFlag(AzeriteTierUnlockSetFlags.Default))
+            {
+                levels = _azeriteTierUnlockLevels.LookupByKey((azeriteUnlockSetId, ItemContext.None));
+                if (levels != null)
+                    return levels[tier];
+            }
+
+            return (uint)CliDB.AzeriteLevelInfoStorage.Count;
         }
 
         public string GetBroadcastTextValue(BroadcastTextRecord broadcastText, LocaleConstant locale = LocaleConstant.enUS, Gender gender = Gender.Male, bool forceGender = false)
@@ -1105,17 +1200,11 @@ namespace Game.DataStorage
             return _itemLevelDeltaToBonusListContainer.LookupByKey(delta);
         }
 
-        public List<uint> GetItemBonusTree(uint itemId, uint itemContext)
+        void VisitItemBonusTree(uint itemId, Action<ItemBonusTreeNodeRecord> visitor)
         {
-            List<uint> bonusListIDs = new List<uint>();
-
-            ItemSparseRecord proto = CliDB.ItemSparseStorage.LookupByKey(itemId);
-            if (proto == null)
-                return bonusListIDs;
-
             var itemIdRange = _itemToBonusTree.LookupByKey(itemId);
             if (itemIdRange.Empty())
-                return bonusListIDs;
+                return;
 
             foreach (var itemTreeId in itemIdRange)
             {
@@ -1124,49 +1213,114 @@ namespace Game.DataStorage
                     continue;
 
                 foreach (ItemBonusTreeNodeRecord bonusTreeNode in treeList)
+                    visitor(bonusTreeNode);
+            }
+        }
+
+        public List<uint> GetItemBonusTree(uint itemId, ItemContext itemContext)
+        {
+            List<uint> bonusListIDs = new List<uint>();
+
+            ItemSparseRecord proto = CliDB.ItemSparseStorage.LookupByKey(itemId);
+            if (proto == null)
+                return bonusListIDs;
+
+            VisitItemBonusTree(itemId, bonusTreeNode =>
+            {
+                if ((ItemContext)bonusTreeNode.ItemContext != itemContext)
+                    return;
+
+                if (bonusTreeNode.ChildItemBonusListID != 0)
                 {
-                    if (bonusTreeNode.ItemContext != itemContext)
-                        continue;
+                    bonusListIDs.Add(bonusTreeNode.ChildItemBonusListID);
+                }
+                else if (bonusTreeNode.ChildItemLevelSelectorID != 0)
+                {
+                    ItemLevelSelectorRecord selector = CliDB.ItemLevelSelectorStorage.LookupByKey(bonusTreeNode.ChildItemLevelSelectorID);
+                    if (selector == null)
+                        return;
 
-                    if (bonusTreeNode.ChildItemBonusListID != 0)
+                    short delta = (short)(selector.MinItemLevel - proto.ItemLevel);
+
+                    uint bonus = GetItemBonusListForItemLevelDelta(delta);
+                    if (bonus != 0)
+                        bonusListIDs.Add(bonus);
+
+                    ItemLevelSelectorQualitySetRecord selectorQualitySet = CliDB.ItemLevelSelectorQualitySetStorage.LookupByKey(selector.ItemLevelSelectorQualitySetID);
+                    if (selectorQualitySet != null)
                     {
-                        bonusListIDs.Add(bonusTreeNode.ChildItemBonusListID);
-                    }
-                    else if (bonusTreeNode.ChildItemLevelSelectorID != 0)
-                    {
-                        ItemLevelSelectorRecord selector = CliDB.ItemLevelSelectorStorage.LookupByKey(bonusTreeNode.ChildItemLevelSelectorID);
-                        if (selector == null)
-                            continue;
-
-                        short delta = (short)(selector.MinItemLevel - proto.ItemLevel);
-
-                        uint bonus = GetItemBonusListForItemLevelDelta(delta);
-                        if (bonus != 0)
-                            bonusListIDs.Add(bonus);
-
-                        ItemLevelSelectorQualitySetRecord selectorQualitySet = CliDB.ItemLevelSelectorQualitySetStorage.LookupByKey(selector.ItemLevelSelectorQualitySetID);
-                        if (selectorQualitySet != null)
+                        var itemSelectorQualities = _itemLevelQualitySelectorQualities.LookupByKey(selector.ItemLevelSelectorQualitySetID);
+                        if (itemSelectorQualities != null)
                         {
-                            var itemSelectorQualities = _itemLevelQualitySelectorQualities.LookupByKey(selector.ItemLevelSelectorQualitySetID);
-                            if (itemSelectorQualities != null)
-                            {
-                                ItemQuality quality = ItemQuality.Uncommon;
-                                if (selector.MinItemLevel >= selectorQualitySet.IlvlEpic)
-                                    quality = ItemQuality.Epic;
-                                else if (selector.MinItemLevel >= selectorQualitySet.IlvlRare)
-                                    quality = ItemQuality.Rare;
+                            ItemQuality quality = ItemQuality.Uncommon;
+                            if (selector.MinItemLevel >= selectorQualitySet.IlvlEpic)
+                                quality = ItemQuality.Epic;
+                            else if (selector.MinItemLevel >= selectorQualitySet.IlvlRare)
+                                quality = ItemQuality.Rare;
 
-                                var itemSelectorQuality = itemSelectorQualities.FirstOrDefault(p => p.Quality < (byte)quality);
+                            var itemSelectorQuality = itemSelectorQualities.FirstOrDefault(p => p.Quality < (byte)quality);
 
-                                if (itemSelectorQuality != null)
-                                    bonusListIDs.Add(itemSelectorQuality.QualityItemBonusListID);
-                            }
+                            if (itemSelectorQuality != null)
+                                bonusListIDs.Add(itemSelectorQuality.QualityItemBonusListID);
                         }
                     }
+
+                    AzeriteUnlockMappingRecord azeriteUnlockMapping = _azeriteUnlockMappings.LookupByKey((proto.Id, itemContext));
+                    if (azeriteUnlockMapping != null)
+                    {
+                        switch (proto.inventoryType)
+                        {
+                            case InventoryType.Head:
+                                bonusListIDs.Add(azeriteUnlockMapping.ItemBonusListHead);
+                                break;
+                            case InventoryType.Shoulders:
+                                bonusListIDs.Add(azeriteUnlockMapping.ItemBonusListShoulders);
+                                break;
+                            case InventoryType.Chest:
+                            case InventoryType.Robe:
+                                bonusListIDs.Add(azeriteUnlockMapping.ItemBonusListChest);
+                                break;
+                        }
+                    }
+
                 }
-            }
+            });
 
             return bonusListIDs;
+        }
+
+        void LoadAzeriteEmpoweredItemUnlockMappings(MultiMap<uint, AzeriteUnlockMappingRecord> azeriteUnlockMappingsBySet, uint itemId)
+        {
+            ItemSparseRecord proto = CliDB.ItemSparseStorage.LookupByKey(itemId);
+            if (proto == null)
+                return;
+
+            VisitItemBonusTree(itemId, bonusTreeNode =>
+            {
+                if (bonusTreeNode.ChildItemBonusListID == 0 && bonusTreeNode.ChildItemLevelSelectorID != 0)
+                {
+                    ItemLevelSelectorRecord selector = CliDB.ItemLevelSelectorStorage.LookupByKey(bonusTreeNode.ChildItemLevelSelectorID);
+                    if (selector == null)
+                        return;
+
+                    var azeriteUnlockMappings = azeriteUnlockMappingsBySet.LookupByKey(selector.AzeriteUnlockMappingSet);
+                    if (azeriteUnlockMappings != null)
+                    {
+                        AzeriteUnlockMappingRecord selectedAzeriteUnlockMapping = null;
+                        foreach (AzeriteUnlockMappingRecord azeriteUnlockMapping in azeriteUnlockMappings)
+                        {
+                            if (azeriteUnlockMapping.ItemLevel > selector.MinItemLevel ||
+                                (selectedAzeriteUnlockMapping != null && selectedAzeriteUnlockMapping.ItemLevel > azeriteUnlockMapping.ItemLevel))
+                                continue;
+
+                            selectedAzeriteUnlockMapping = azeriteUnlockMapping;
+                        }
+
+                        if (selectedAzeriteUnlockMapping != null)
+                            _azeriteUnlockMappings[(proto.Id, (ItemContext)bonusTreeNode.ItemContext)] = selectedAzeriteUnlockMapping;
+                    }
+                }
+            });
         }
 
         public ItemChildEquipmentRecord GetItemChildEquipment(uint itemId)
@@ -1518,11 +1672,6 @@ namespace Game.DataStorage
             return _rewardPackItems.LookupByKey(rewardPackID);
         }
 
-        public uint GetRulesetItemUpgrade(uint itemId)
-        {
-            return _rulesetItemUpgrade.LookupByKey(itemId);
-        }
-
         public List<SkillLineRecord> GetSkillLinesForParentSkill(uint parentSkillId)
         {
             return _skillLinesByParentSkillLine.LookupByKey(parentSkillId);
@@ -1552,6 +1701,11 @@ namespace Game.DataStorage
         public List<SpecializationSpellsRecord> GetSpecializationSpells(uint specId)
         {
             return _specializationSpellsBySpec.LookupByKey(specId);
+        }
+
+        public bool IsSpecSetMember(int specSetId, uint specId)
+        {
+            return _specsBySpecSet.Contains(Tuple.Create(specSetId, specId));
         }
 
         bool IsValidSpellFamiliyName(SpellFamilyNames family)
@@ -1943,6 +2097,13 @@ namespace Game.DataStorage
         MultiMap<uint, ArtifactPowerRecord> _artifactPowers = new MultiMap<uint, ArtifactPowerRecord>();
         MultiMap<uint, uint> _artifactPowerLinks = new MultiMap<uint, uint>();
         Dictionary<Tuple<uint, byte>, ArtifactPowerRankRecord> _artifactPowerRanks = new Dictionary<Tuple<uint, byte>, ArtifactPowerRankRecord>();
+        Dictionary<uint, AzeriteEmpoweredItemRecord> _azeriteEmpoweredItems = new Dictionary<uint, AzeriteEmpoweredItemRecord>();
+        Dictionary<(uint azeriteEssenceId, uint rank), AzeriteEssencePowerRecord> _azeriteEssencePowersByIdAndRank = new Dictionary<(uint azeriteEssenceId, uint rank), AzeriteEssencePowerRecord>();
+        List<AzeriteItemMilestonePowerRecord> _azeriteItemMilestonePowers = new List<AzeriteItemMilestonePowerRecord>();
+        AzeriteItemMilestonePowerRecord[] _azeriteItemMilestonePowerByEssenceSlot = new AzeriteItemMilestonePowerRecord[SharedConst.MaxAzeriteEssenceSlot];
+        MultiMap<uint, AzeritePowerSetMemberRecord> _azeritePowers = new MultiMap<uint, AzeritePowerSetMemberRecord>();
+        Dictionary<(uint azeriteUnlockSetId, ItemContext itemContext), byte[]> _azeriteTierUnlockLevels = new Dictionary<(uint azeriteUnlockSetId, ItemContext itemContext), byte[]>();
+        Dictionary<(uint itemId, ItemContext itemContext), AzeriteUnlockMappingRecord> _azeriteUnlockMappings = new Dictionary<(uint itemId, ItemContext itemContext), AzeriteUnlockMappingRecord>();
         List<Tuple<byte, byte, uint>> _characterFacialHairStyles = new List<Tuple<byte, byte, uint>>();
         MultiMap<Tuple<byte, byte, CharBaseSectionVariation>, CharSectionsRecord> _charSections = new MultiMap<Tuple<byte, byte, CharBaseSectionVariation>, CharSectionsRecord>();
         Dictionary<uint, CharStartOutfitRecord> _charStartOutfits = new Dictionary<uint, CharStartOutfitRecord>();
@@ -1982,11 +2143,11 @@ namespace Game.DataStorage
         Dictionary<uint, Tuple<List<QuestPackageItemRecord>, List<QuestPackageItemRecord>>> _questPackages = new Dictionary<uint, Tuple<List<QuestPackageItemRecord>, List<QuestPackageItemRecord>>>();
         MultiMap<uint, RewardPackXCurrencyTypeRecord> _rewardPackCurrencyTypes = new MultiMap<uint, RewardPackXCurrencyTypeRecord>();
         MultiMap<uint, RewardPackXItemRecord> _rewardPackItems = new MultiMap<uint, RewardPackXItemRecord>();
-        Dictionary<uint, uint> _rulesetItemUpgrade = new Dictionary<uint, uint>();
         MultiMap<uint, SkillLineRecord> _skillLinesByParentSkillLine = new MultiMap<uint, SkillLineRecord>();
         MultiMap<uint, SkillLineAbilityRecord> _skillLineAbilitiesBySkillupSkill = new MultiMap<uint, SkillLineAbilityRecord>();
         MultiMap<uint, SkillRaceClassInfoRecord> _skillRaceClassInfoBySkill = new MultiMap<uint, SkillRaceClassInfoRecord>();
         MultiMap<uint, SpecializationSpellsRecord> _specializationSpellsBySpec = new MultiMap<uint, SpecializationSpellsRecord>();
+        List<Tuple<int, uint>> _specsBySpecSet = new List<Tuple<int, uint>>();
         List<byte> _spellFamilyNames = new List<byte>();
         Dictionary<uint, List<SpellPowerRecord>> _spellPowers = new Dictionary<uint, List<SpellPowerRecord>>();
         Dictionary<uint, Dictionary<uint, List<SpellPowerRecord>>> _spellPowerDifficulties = new Dictionary<uint, Dictionary<uint, List<SpellPowerRecord>>>();

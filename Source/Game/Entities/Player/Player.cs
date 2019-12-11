@@ -266,8 +266,8 @@ namespace Game.Entities
             InitRunes();
 
             SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.Coinage), (ulong)WorldConfig.GetIntValue(WorldCfg.StartPlayerMoney));
-            SetCurrency(CurrencyTypes.ApexisCrystals, WorldConfig.GetUIntValue(WorldCfg.CurrencyStartApexisCrystals));
-            SetCurrency(CurrencyTypes.JusticePoints, WorldConfig.GetUIntValue(WorldCfg.CurrencyStartJusticePoints));
+            SetCreateCurrency(CurrencyTypes.ApexisCrystals, WorldConfig.GetUIntValue(WorldCfg.CurrencyStartApexisCrystals));
+            SetCreateCurrency(CurrencyTypes.JusticePoints, WorldConfig.GetUIntValue(WorldCfg.CurrencyStartJusticePoints));
 
             // start with every map explored
             if (WorldConfig.GetBoolValue(WorldCfg.StartAllExplored))
@@ -1201,7 +1201,7 @@ namespace Game.Entities
         }
 
         //Currency - Money
-        void SetCurrency(CurrencyTypes id, uint count, bool printLog = true)
+        void SetCreateCurrency(CurrencyTypes id, uint count, bool printLog = true)
         {
             var playerCurrency = _currencyStorage.LookupByKey(id);
             if (playerCurrency == null)
@@ -1233,6 +1233,27 @@ namespace Game.Entities
 
             if (!ignoreMultipliers)
                 count *= (int)GetTotalAuraMultiplierByMiscValue(AuraType.ModCurrencyGain, (int)id);
+
+            // Currency that is immediately converted into reputation with that faction instead
+            FactionRecord factionEntry = CliDB.FactionStorage.LookupByKey(currency.FactionID);
+            if (factionEntry != null)
+            {
+                if (currency.Flags.HasAnyFlag((uint)CurrencyFlags.HighPrecision))
+                    count /= 100;
+                GetReputationMgr().ModifyReputation(factionEntry, count, true);
+                return;
+            }
+
+            if (id == CurrencyTypes.Azerite)
+            {
+                if (count > 0)
+                {
+                    Item heartOfAzeroth = GetItemByEntry(PlayerConst.ItemIdHeartOfAzeroth, ItemSearchLocation.Everywhere);
+                    if (heartOfAzeroth != null)
+                        heartOfAzeroth.ToAzeriteItem().GiveXP((ulong)count);
+                }
+                return;
+            }
 
             uint oldTotalCount = 0;
             uint oldWeekCount = 0;
@@ -1370,6 +1391,13 @@ namespace Game.Entities
                 return 0;
 
             return playerCurrency.WeeklyQuantity;
+        }
+        public uint GetTrackedCurrencyCount(uint id)
+        {
+            if (!_currencyStorage.ContainsKey(id))
+                return 0;
+
+            return _currencyStorage[id].TrackedQuantity;
         }
 
         //Action Buttons - CUF Profile
@@ -1884,7 +1912,7 @@ namespace Game.Entities
                     if (transport)
                     {
                         transferPending.Ship.HasValue = true;
-                        transferPending.Ship.Value.ID = transport.GetEntry();
+                        transferPending.Ship.Value.Id = transport.GetEntry();
                         transferPending.Ship.Value.OriginMapID = (int)GetMapId();
                     }
 
@@ -4666,7 +4694,7 @@ namespace Game.Entities
                 SpawnCorpseBones();
             }
 
-            WorldSafeLocsRecord ClosestGrave = null;
+            WorldSafeLocsEntry ClosestGrave = null;
 
             // Special handle for Battlegroundmaps
             Battleground bg = GetBattleground();
@@ -4688,11 +4716,11 @@ namespace Game.Entities
             // and don't show spirit healer location
             if (ClosestGrave != null)
             {
-                TeleportTo(ClosestGrave.MapID, ClosestGrave.Loc.X, ClosestGrave.Loc.Y, ClosestGrave.Loc.Z, (ClosestGrave.Facing * MathFunctions.PI) / 180);
+                TeleportTo(ClosestGrave.Loc);
                 if (IsDead())                                        // not send if alive, because it used in TeleportTo()
                 {
                     DeathReleaseLoc packet = new DeathReleaseLoc();
-                    packet.MapID = (int)ClosestGrave.MapID;
+                    packet.MapID = (int)ClosestGrave.Loc.GetMapId();
                     packet.Loc = ClosestGrave.Loc;
                     SendPacket(packet);
                 }
@@ -5388,20 +5416,6 @@ namespace Game.Entities
 
             UpdateCriteria(CriteriaTypes.ReachLevel);
 
-            // Refer-A-Friend
-            if (GetSession().GetRecruiterId() != 0)
-            {
-                if (level < WorldConfig.GetIntValue(WorldCfg.MaxRecruitAFriendBonusPlayerLevel))
-                {
-                    if (level % 2 == 0)
-                    {
-                        ++m_grantableLevels;
-
-                        SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.GrantableLevels), (byte)1);
-                    }
-                }
-            }
-
             Global.ScriptMgr.OnPlayerLevelChanged(this, (byte)oldLevel);
         }
 
@@ -6080,7 +6094,7 @@ namespace Game.Entities
                     // But exclude stoppable elevators from this hack - they would be teleporting from one end to another
                     // if affected transports move so far horizontally that it causes them to run out of visibility range then you are out of luck
                     // fix visibility instead of adding hacks here
-                    if (target.ToGameObject().IsDynTransport())
+                    if (!target.ToGameObject().IsDynTransport())
                         s64.Add(target.GetGUID());
                     break;
                 case TypeId.Unit:
@@ -6977,8 +6991,6 @@ namespace Game.Entities
             GetSession().SendDoFlight(mountDisplayId, path, startNode);
         }
 
-        public byte GetGrantableLevels() { return m_grantableLevels; }
-        public void SetGrantableLevels(int val) { m_grantableLevels = (byte)val; }
         public bool GetsRecruitAFriendBonus(bool forXP)
         {
             bool recruitAFriend = false;
@@ -7430,6 +7442,9 @@ namespace Game.Entities
         public void AddPlayerLocalFlag(PlayerLocalFlags flags) { SetUpdateFieldFlagValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.LocalFlags), (int)flags); }
         public void RemovePlayerLocalFlag(PlayerLocalFlags flags) { RemoveUpdateFieldFlagValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.LocalFlags), (int)flags); }
         public void SetPlayerLocalFlags(PlayerLocalFlags flags) { SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.LocalFlags), (int)flags); }
+
+        public byte GetNumRespecs() { return m_activePlayerData.NumRespecs; }
+        public void SetNumRespecs(byte numRespecs) { SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.NumRespecs), numRespecs); }
 
         public void SetWatchedFactionIndex(uint index) { SetUpdateFieldValue(m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.WatchedFactionIndex), index); }
 

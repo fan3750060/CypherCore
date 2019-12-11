@@ -923,6 +923,18 @@ namespace Framework.Constants
         First = NoLinkRequired | DontCountFirstBonusRank,
     }
 
+    public enum AzeriteItemMilestoneType
+    {
+        MajorEssence = 0,
+        MinorEssence = 1,
+        BonusStamina = 2
+    }
+
+    public enum AzeriteTierUnlockSetFlags
+    {
+        Default = 0x1
+    }
+
     public enum BattlegroundBracketId                                  // bracketId for level ranges
     {
         First = 0,
@@ -987,7 +999,8 @@ namespace Framework.Constants
 
     public enum Curves
     {
-        ArtifactRelicItemLevelBonus = 1718
+        ArtifactRelicItemLevelBonus = 1718,
+        AzeriteEmpoweredItemRespecCost = 6785
     }
 
     public enum Emote
@@ -1393,6 +1406,14 @@ namespace Framework.Constants
         UnderwaterAllowed = 0x8
     }
 
+    public enum ModifierTreeOperator
+    {
+        SingleTrue = 2,
+        SingleFalse = 3,
+        All = 4,
+        Some = 8
+    }
+
     public enum MountCapabilityFlags : byte
     {
         Ground = 0x1,
@@ -1428,6 +1449,18 @@ namespace Framework.Constants
         Inverse = 0x2,
 
         All = AlwaysVisible | Inverse
+    }
+
+    public enum PlayerConditionLfgStatus
+    {
+        InLFGDungeon = 1,
+        InLFGRandomDungeon = 2,
+        InLFGFirstRandomDungeon = 3,
+        PartialClear = 4,
+        StrangerCount = 5,
+        VoteKickCount = 6,
+        BootCount = 7,
+        GearDiff = 8
     }
 
     public enum PrestigeLevelInfoFlags : byte

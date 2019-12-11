@@ -160,6 +160,11 @@ namespace Game.Entities
             return _values.IndexOf(value);
         }
 
+        public int FindIndexIf(Predicate<T> blah)
+        {
+            return _values.FindIndex(blah);
+        }
+
         public bool HasChanged(int index)
         {
             return (_updateMask[index / 32] & (1 << (index % 32))) != 0;
@@ -176,6 +181,12 @@ namespace Game.Entities
                 else
                     for (int block = 0; block < _values.Count / 32; ++block)
                         data.WriteUInt32(_updateMask[block]);
+            }
+
+            else if (_values.Count == 32)
+            {
+                data.WriteBits(_updateMask.Last(), 32);
+                return;
             }
 
             if ((_values.Count % 32) != 0)
@@ -257,6 +268,11 @@ namespace Game.Entities
             _updateMask[block] &= ~(uint)UpdateMask.GetBlockFlag(index);
         }
 
+        public bool Empty()
+        {
+            return _values.Empty();
+        }
+
         public int Size()
         {
             return _values.Count;
@@ -313,8 +329,10 @@ namespace Game.Entities
             _changesMask = new UpdateMask(changeMask);
         }
 
-        public abstract void WriteCreate(WorldPacket data, UpdateFieldFlag fieldVisibilityFlags, T owner, Player receiver);
-        public abstract void WriteUpdate(WorldPacket data, UpdateFieldFlag fieldVisibilityFlags, T owner, Player receiver);
+        public virtual void WriteCreate(WorldPacket data, T owner, Player receiver) { }
+        public virtual void WriteUpdate(WorldPacket data, T owner, Player receiver) { }
+        public virtual void WriteCreate(WorldPacket data, UpdateFieldFlag fieldVisibilityFlags, T owner, Player receiver) { }
+        public virtual void WriteUpdate(WorldPacket data, UpdateFieldFlag fieldVisibilityFlags, T owner, Player receiver) { }
 
         public abstract void ClearChangesMask();
 

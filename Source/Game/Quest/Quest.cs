@@ -125,16 +125,17 @@ namespace Game
             TreasurePickerID = fields.Read<int>(109);
             Expansion = fields.Read<int>(110);
             ManagedWorldStateID = fields.Read<int>(111);
+            QuestSessionBonus = fields.Read<int>(112);
 
-            LogTitle = fields.Read<string>(112);
-            LogDescription = fields.Read<string>(113);
-            QuestDescription = fields.Read<string>(114);
-            AreaDescription = fields.Read<string>(115);
-            PortraitGiverText = fields.Read<string>(116);
-            PortraitGiverName = fields.Read<string>(117);
-            PortraitTurnInText = fields.Read<string>(118);
-            PortraitTurnInName = fields.Read<string>(119);
-            QuestCompletionLog = fields.Read<string>(120);
+            LogTitle = fields.Read<string>(113);
+            LogDescription = fields.Read<string>(114);
+            QuestDescription = fields.Read<string>(115);
+            AreaDescription = fields.Read<string>(116);
+            PortraitGiverText = fields.Read<string>(117);
+            PortraitGiverName = fields.Read<string>(118);
+            PortraitTurnInText = fields.Read<string>(119);
+            PortraitTurnInName = fields.Read<string>(120);
+            QuestCompletionLog = fields.Read<string>(121);
         }
 
         public void LoadQuestDetails(SQLFields fields)
@@ -217,7 +218,7 @@ namespace Game
         public void LoadQuestObjective(SQLFields fields)
         {
             QuestObjective obj = new QuestObjective();
-            obj.ID = fields.Read<uint>(0);
+            obj.Id = fields.Read<uint>(0);
             obj.QuestID = fields.Read<uint>(1);
             obj.Type = (QuestObjectiveType)fields.Read<byte>(2);
             obj.StorageIndex = fields.Read<sbyte>(3);
@@ -237,7 +238,7 @@ namespace Game
 
             foreach (QuestObjective obj in Objectives)
             {
-                if (obj.ID == objID)
+                if (obj.Id == objID)
                 {
                     byte effectIndex = fields.Read<byte>(3);
                     if (obj.VisualEffects == null)
@@ -498,8 +499,10 @@ namespace Game
             QueryData.Info.POIPriority = POIPriority;
 
             QueryData.Info.AllowableRaces = AllowableRaces;
-            QueryData.Info.TreasurePickerID = (int)TreasurePickerID;
+            QueryData.Info.TreasurePickerID = TreasurePickerID;
             QueryData.Info.Expansion = Expansion;
+            QueryData.Info.ManagedWorldStateID = ManagedWorldStateID;
+            QueryData.Info.QuestSessionBonus = 0; //GetQuestSessionBonus(); // this is only sent while quest session is active
 
             foreach (QuestObjective questObjective in Objectives)
                 QueryData.Info.Objectives.Add(questObjective);
@@ -606,6 +609,7 @@ namespace Game
         public int TreasurePickerID;
         public int Expansion;
         public int ManagedWorldStateID;
+        public int QuestSessionBonus;
         public List<QuestObjective> Objectives = new List<QuestObjective>();
         public string LogTitle = "";
         public string LogDescription = "";
@@ -724,7 +728,7 @@ namespace Game
 
     public class QuestObjective
     {
-        public uint ID;
+        public uint Id;
         public uint QuestID;
         public QuestObjectiveType Type;
         public sbyte StorageIndex;

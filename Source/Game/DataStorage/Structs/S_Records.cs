@@ -166,6 +166,13 @@ namespace Game.DataStorage
         public byte DisplayOrder;
     }
 
+    public sealed class SpecSetMemberRecord
+    {
+        public uint Id;
+        public uint ChrSpecializationID;
+        public uint SpecSetID;
+    }
+
     public sealed class SpellAuraOptionsRecord
     {
         public uint Id;
@@ -269,12 +276,12 @@ namespace Game.DataStorage
     public sealed class SpellEffectRecord
     {
         public uint Id;
+        public short EffectAura;
         public uint DifficultyID;
         public uint EffectIndex;
         public uint Effect;
         public float EffectAmplitude;
         public int EffectAttributes;
-        public short EffectAura;
         public uint EffectAuraPeriod;
         public float EffectBonusCoefficient;
         public float EffectChainAmplitude;
@@ -382,6 +389,7 @@ namespace Game.DataStorage
     public sealed class SpellMiscRecord
     {
         public uint Id;
+        public int[] Attributes = new int[14];
         public byte DifficultyID;
         public ushort CastingTimeIndex;
         public ushort DurationIndex;
@@ -393,7 +401,6 @@ namespace Game.DataStorage
         public uint SpellIconFileDataID;
         public uint ActiveIconFileDataID;
         public uint ContentTuningID;
-        public int[] Attributes = new int[14];
         public uint SpellID;
     }
 
