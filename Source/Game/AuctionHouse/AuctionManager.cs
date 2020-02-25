@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,12 +79,12 @@ namespace Game
             if (!item)
                 return;
 
-            uint bidderAccId = 0;
+            uint bidderAccId;
             ObjectGuid bidderGuid = ObjectGuid.Create(HighGuid.Player, auction.bidder);
             Player bidder = Global.ObjAccessor.FindPlayer(bidderGuid);
             // data for gm.log
             string bidderName = "";
-            bool logGmTrade = false;
+            bool logGmTrade;
 
             if (bidder)
             {
@@ -428,8 +428,7 @@ namespace Game
         public bool RemoveAuction(AuctionEntry auction)
         {
             Global.ScriptMgr.OnAuctionRemove(this, auction);
-
-            return AuctionsMap.TryRemove(auction.Id, out AuctionEntry removedItem);
+            return AuctionsMap.TryRemove(auction.Id, out _);
         }
 
         public void Update()

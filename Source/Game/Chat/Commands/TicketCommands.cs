@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -440,7 +440,7 @@ namespace Game.Chat.Commands
             }
 
             // Get security level of player, whom this ticket is assigned to
-            AccountTypes security = AccountTypes.Player;
+            AccountTypes security;
             Player assignedPlayer = ticket.GetAssignedPlayer();
             if (assignedPlayer && assignedPlayer.IsInWorld)
                 security = assignedPlayer.GetSession().GetSecurity();

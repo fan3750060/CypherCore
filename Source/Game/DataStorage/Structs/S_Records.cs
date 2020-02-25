@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -537,11 +537,11 @@ namespace Game.DataStorage
     public sealed class SpellVisualKitRecord
     {
         public uint Id;
-        public int Flags;
         public sbyte FallbackPriority;
-        public uint FallbackSpellVisualKitId;
+        public int FallbackSpellVisualKitId;
         public ushort DelayMin;
         public ushort DelayMax;
+        public int[] Flags = new int[2];
     }
 
     public sealed class SpellXSpellVisualRecord

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -277,8 +277,7 @@ namespace Game.Chat
 
             ObjectGuid targetGuid;
             string targetName;
-            Player playerNotUsed;
-            if (!handler.ExtractPlayerTarget(new StringArguments(playerNameStr), out playerNotUsed, out targetGuid, out targetName))
+            if (!handler.ExtractPlayerTarget(new StringArguments(playerNameStr), out _, out targetGuid, out targetName))
                 return false;
 
             CharacterCacheEntry characterInfo = Global.CharacterCacheStorage.GetCharacterCacheByGuid(targetGuid);

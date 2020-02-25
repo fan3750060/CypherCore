@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1181,6 +1181,7 @@ namespace Game.Entities
             public uint linkedTrap;                              // 20 linkedTrap, References: GameObjects, NoValue = 0
             public uint PlayOpenAnimationonOpening;              // 21 Play Open Animation on Opening, enum { false, true, }; Default: false
             public uint turnpersonallootsecurityoff;             // 22 turn personal loot security off, enum { false, true, }; Default: false
+            public uint ClearObjectVignetteonOpening;            // 23 Clear Object Vignette on Opening, enum { false, true, }; Default: false
         }
 
         public struct challengemodereward

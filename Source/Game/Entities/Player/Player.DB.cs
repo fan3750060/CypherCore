@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1047,7 +1047,7 @@ namespace Game.Entities
                         Log.outError(LogFilter.Player, "_LoadBoundInstances: player {0}({1}) has bind to not existed or not dungeon map {2} ({3})", GetName(), GetGUID().ToString(), mapId, mapname);
                         deleteInstance = true;
                     }
-                    else if (difficulty >= (int)Difficulty.Max)
+                    else if (CliDB.DifficultyStorage.HasRecord(difficulty))
                     {
                         Log.outError(LogFilter.Player, "_LoadBoundInstances: player {0}({1}) has bind to not existed difficulty {2} instance for map {3} ({4})", GetName(), GetGUID().ToString(), difficulty, mapId, mapname);
                         deleteInstance = true;
@@ -1235,7 +1235,7 @@ namespace Game.Entities
             ItemTemplate proto = Global.ObjectMgr.GetItemTemplate(itemEntry);
             if (proto == null)
             {
-                Log.outError(LogFilter.Player, $"Player {(player != null ? player.GetName() : "<unknown>")} ({playerGuid.ToString()}) has unknown item_template (ProtoType) in mailed items(GUID: {itemGuid} template: {itemEntry}) in mail ({mailId}), deleted.");
+                Log.outError(LogFilter.Player, $"Player {(player != null ? player.GetName() : "<unknown>")} ({playerGuid.ToString()}) has unknown item in mailed items (GUID: {itemGuid} template: {itemEntry}) in mail ({mailId}), deleted.");
 
                 SQLTransaction trans = new SQLTransaction();
 

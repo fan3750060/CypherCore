@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -579,6 +579,7 @@ namespace Game.Network.Packets
             attackRoundInfo.WriteInt16(ContentTuning.PlayerLevelDelta);
             attackRoundInfo.WriteInt8(ContentTuning.TargetScalingLevelDelta);
             attackRoundInfo.WriteUInt16(ContentTuning.PlayerItemLevel);
+            attackRoundInfo.WriteUInt16(ContentTuning.TargetItemLevel);
             attackRoundInfo.WriteUInt16(ContentTuning.ScalingHealthItemLevelCurveID);
             attackRoundInfo.WriteUInt8((byte)(ContentTuning.ScalesWithItemLevel ? 1 : 0));
 

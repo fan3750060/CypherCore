@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -487,7 +487,7 @@ namespace Game.Loots
                 ItemTemplate proto = Global.ObjectMgr.GetItemTemplate(itemid);
                 if (proto == null)
                 {
-                    Log.outError(LogFilter.Sql, "Table '{0}' entry {1} item {2}: item entry not listed in `item_template` - skipped", store.GetName(), entry, itemid);
+                    Log.outError(LogFilter.Sql, "Table '{0}' entry {1} item {2}: item does not exist - skipped", store.GetName(), entry, itemid);
                     return false;
                 }
 

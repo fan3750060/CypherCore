@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -984,6 +984,17 @@ namespace Framework.Constants
         CustomDisplay3 = 15,
 
         Max
+    }
+
+    public enum BattlemasterListFlags : sbyte
+    {
+        Disabled = 0x01,
+        SkipRoleCheck = 0x02,
+        Unk4 = 0x04,
+        CanInitWarGame = 0x08,
+        CanSpecificQueue = 0x10,
+        Brawl = 0x20,
+        Factional = 0x40
     }
 
     public enum ChrSpecializationFlag

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -225,7 +225,7 @@ namespace Game.Chat.Commands
             string param3 = args.NextString();
 
             int realmId = -1;
-            uint accountId = 0;
+            uint accountId;
             string accountName;
             uint id = 0;
             RBACData rdata = null;

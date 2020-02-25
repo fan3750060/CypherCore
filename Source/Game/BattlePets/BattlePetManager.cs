@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -474,18 +474,14 @@ namespace Game.BattlePets
         {
             public void CalculateStats()
             {
-                float health = 0.0f;
-                float power = 0.0f;
-                float speed = 0.0f;
-
                 // get base breed stats
                 var breedState = _battlePetBreedStates.LookupByKey(PacketInfo.Breed);
                 if (breedState == null) // non existing breed id
                     return;
 
-                health = breedState[BattlePetState.StatStamina];
-                power = breedState[BattlePetState.StatPower];
-                speed = breedState[BattlePetState.StatSpeed];
+                float health = breedState[BattlePetState.StatStamina];
+                float power = breedState[BattlePetState.StatPower];
+                float speed = breedState[BattlePetState.StatSpeed];
 
                 // modify stats depending on species - not all pets have this
                 var speciesState = _battlePetSpeciesStates.LookupByKey(PacketInfo.Species);

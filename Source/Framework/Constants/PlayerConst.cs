@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ namespace Framework.Constants
         public const uint infinityCooldownDelayCheck = Time.Month / 2;
         public const int MaxPlayerSummonDelay = 2 * Time.Minute;
 
-        public const int TaxiMaskSize = 311;
+        public const int TaxiMaskSize = 319;
 
         // corpse reclaim times
         public const int DeathExpireStep = (5 * Time.Minute);
@@ -542,7 +542,7 @@ namespace Framework.Constants
         // first slot for item stored (in any way in player items data)
         Start = 0,
         // last+1 slot for item stored (in any way in player items data)
-        End = 195,
+        End = 199,
         Count = (End - Start)
     }
 

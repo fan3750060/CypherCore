@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@ namespace Game.Network.Packets
             _worldPacket.WriteUInt32(SceneScriptPackageID);
             _worldPacket.WritePackedGuid(TransportGUID);
             _worldPacket.WriteXYZO(Location);
+            _worldPacket.WriteBit(PerformTactCallbacks);
+            _worldPacket.FlushBits();
         }
 
         public uint SceneID;
@@ -40,6 +42,7 @@ namespace Game.Network.Packets
         public uint SceneScriptPackageID;
         public ObjectGuid TransportGUID;
         public Position Location;
+        public bool PerformTactCallbacks;
     }
 
     class CancelScene : ServerPacket

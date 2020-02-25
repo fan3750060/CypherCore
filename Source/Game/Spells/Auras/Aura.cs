@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1713,7 +1713,7 @@ namespace Game.Spells
                 return 0;
 
             // At least one effect has to pass checks to proc aura
-            uint procEffectMask = 0;
+            uint procEffectMask = aurApp.GetEffectMask();
             for (byte i = 0; i < SpellConst.MaxEffects; ++i)
                 if ((procEffectMask & (1u << i)) != 0)
                     if ((procEntry.DisableEffectsMask & (1u << i)) != 0 || !GetEffect(i).CheckEffectProc(aurApp, eventInfo))

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -521,9 +521,10 @@ namespace Game.Chat
                 }
 
                 string targetAccountName = "";
-                uint targetAccountId = 0;
-                AccountTypes targetSecurity = 0;
-                uint gm = 0;
+                uint targetAccountId;
+                AccountTypes targetSecurity;
+                uint gm;
+
                 string arg1 = args.NextString();
                 string arg2 = args.NextString();
                 string arg3 = args.NextString();

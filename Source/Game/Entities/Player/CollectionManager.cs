@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -626,6 +626,9 @@ namespace Game.Entities
 
             ItemTemplate itemTemplate = Global.ObjectMgr.GetItemTemplate(itemModifiedAppearance.ItemID);
             if (itemTemplate == null)
+                return false;
+
+            if (!_owner.GetPlayer())
                 return false;
 
             if (_owner.GetPlayer().CanUseItem(itemTemplate) != InventoryResult.Ok)

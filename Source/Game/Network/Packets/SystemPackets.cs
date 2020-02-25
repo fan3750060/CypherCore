@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,6 @@ namespace Game.Network.Packets
             _worldPacket.WriteBit(WillKickFromWorld);
             _worldPacket.WriteBit(KioskModeEnabled);
             _worldPacket.WriteBit(CompetitiveModeEnabled);
-            _worldPacket.WriteBit(RaceClassExpansionLevels.HasValue);
             _worldPacket.WriteBit(TokenBalanceEnabled);
             _worldPacket.WriteBit(WarModeFeatureEnabled);
             _worldPacket.WriteBit(ClubsEnabled);
@@ -87,7 +86,7 @@ namespace Game.Network.Packets
             _worldPacket.WriteBit(VoiceChatDisabledByParentalControl);
             _worldPacket.WriteBit(VoiceChatMutedByParentalControl);
             _worldPacket.WriteBit(QuestSessionEnabled);
-            _worldPacket.WriteBit(Unused825);
+            _worldPacket.WriteBit(IsMuted);
             _worldPacket.WriteBit(ClubFinderEnabled);
             _worldPacket.FlushBits();
 
@@ -124,14 +123,7 @@ namespace Game.Network.Packets
                 _worldPacket.WriteInt32(SessionAlert.Value.DisplayTime);
             }
 
-            if (RaceClassExpansionLevels.HasValue)
-            {
-                _worldPacket.WriteInt32(RaceClassExpansionLevels.Value.Count);
-                foreach (var level in RaceClassExpansionLevels.Value)
-                    _worldPacket.WriteUInt8(level);
-            }
-
-            _worldPacket.WriteBit(VoiceChatManagerSettings.Enabled);
+            _worldPacket.WriteBit(VoiceChatManagerSettings.IsSquelched);
             _worldPacket.WritePackedGuid(VoiceChatManagerSettings.BnetAccountGuid);
             _worldPacket.WritePackedGuid(VoiceChatManagerSettings.GuildGuid);
 
@@ -189,10 +181,9 @@ namespace Game.Network.Packets
         public bool VoiceChatDisabledByParentalControl;
         public bool VoiceChatMutedByParentalControl;
         public bool QuestSessionEnabled;
-        public bool Unused825;
+        public bool IsMuted;
         public bool ClubFinderEnabled;
 
-        public Optional<List<byte>> RaceClassExpansionLevels;
         public SocialQueueConfig QuickJoinConfig;
         public VoiceChatProxySettings VoiceChatManagerSettings;
         public RafSystemFeatureInfo RAFSystem;
@@ -251,7 +242,7 @@ namespace Game.Network.Packets
 
         public struct VoiceChatProxySettings
         {
-            public bool Enabled;
+            public bool IsSquelched;
             public ObjectGuid BnetAccountGuid;
             public ObjectGuid GuildGuid;
         }

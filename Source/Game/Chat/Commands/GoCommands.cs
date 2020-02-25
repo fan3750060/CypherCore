@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -262,8 +262,8 @@ namespace Game.Chat.Commands
                 return false;
             }
 
-            float x, y, z = 0;
-            uint mapId = 0;
+            float x, y, z;
+            uint mapId;
 
             var poiData = Global.ObjectMgr.GetQuestPOIData(questID);
             if (poiData != null)

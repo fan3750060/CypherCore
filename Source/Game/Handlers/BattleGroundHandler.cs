@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,19 +64,19 @@ namespace Game
                 return;
             }
 
-            uint bgTypeId_ = (uint)(battlemasterJoin.QueueIDs[0] & 0xFFFF);
-            if (!CliDB.BattlemasterListStorage.ContainsKey(bgTypeId_))
+            BattlegroundTypeId bgTypeId = (BattlegroundTypeId)(battlemasterJoin.QueueIDs[0] & 0xFFFF);
+            BattlemasterListRecord battlemasterListEntry = CliDB.BattlemasterListStorage.LookupByKey(bgTypeId);
+            if (battlemasterListEntry == null)
             {
-                Log.outError(LogFilter.Network, "Battleground: invalid bgtype ({0}) received. possible cheater? player guid {1}", bgTypeId_, GetPlayer().GetGUID().ToString());
+                Log.outError(LogFilter.Network, "Battleground: invalid bgtype ({0}) received. possible cheater? player guid {1}", bgTypeId, GetPlayer().GetGUID().ToString());
                 return;
             }
 
-            if (Global.DisableMgr.IsDisabledFor(DisableType.Battleground, bgTypeId_, null))
+            if (Global.DisableMgr.IsDisabledFor(DisableType.Battleground, (uint)bgTypeId, null) || battlemasterListEntry.Flags.HasAnyFlag(BattlemasterListFlags.Disabled))
             {
                 GetPlayer().SendSysMessage(CypherStrings.BgDisabled);
                 return;
             }
-            BattlegroundTypeId bgTypeId = (BattlegroundTypeId)bgTypeId_;
 
             // can do this, since it's Battleground, not arena
             BattlegroundQueueTypeId bgQueueTypeId = Global.BattlegroundMgr.BGQueueTypeId(bgTypeId, 0);

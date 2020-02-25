@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -274,6 +274,7 @@ namespace Game.Network.Packets
         public override void Write()
         {
             _worldPacket.WriteUInt32(GameObjectID);
+            _worldPacket.WritePackedGuid(Guid);
             _worldPacket.WriteBit(Allow);
             _worldPacket.FlushBits();
 
@@ -307,6 +308,7 @@ namespace Game.Network.Packets
         }
 
         public uint GameObjectID;
+        public ObjectGuid Guid;
         public bool Allow;
         public GameObjectStats Stats;
     }
@@ -409,7 +411,7 @@ namespace Game.Network.Packets
         }
 
         public int MissingQuestCount;
-        public uint[] MissingQuestPOIs = new uint[100];
+        public uint[] MissingQuestPOIs = new uint[125];
     }
 
     public class QuestPOIQueryResponse : ServerPacket

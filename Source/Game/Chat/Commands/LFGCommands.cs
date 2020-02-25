@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,10 +30,8 @@ namespace Game.Chat
         [Command("player", RBACPermissions.CommandLfgPlayer, true)]
         static bool HandleLfgPlayerInfoCommand(StringArguments args, CommandHandler handler)
         {
-            Player target = null;
-            string playerName;
-            ObjectGuid guid;
-            if (!handler.ExtractPlayerTarget(args, out target, out guid, out playerName))
+            Player target;
+            if (!handler.ExtractPlayerTarget(args, out target))
                 return false;
 
             GetPlayerInfo(handler, target);
@@ -46,7 +44,7 @@ namespace Game.Chat
             if (args.Empty())
                 return false;
 
-            Player playerTarget = null;
+            Player playerTarget;
             ObjectGuid guidTarget;
             string nameTarget;
 

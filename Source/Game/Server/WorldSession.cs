@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -552,6 +552,11 @@ namespace Game
             TutorialFlags packet = new TutorialFlags();
             Array.Copy(tutorials, packet.TutorialData, (int)AccountDataTypes.Max);
             SendPacket(packet);
+        }
+
+        public bool CanSpeak()
+        {
+            return m_muteTime <= GameTime.GetGameTime();
         }
 
         public void SendNotification(CypherStrings str, params object[] args)

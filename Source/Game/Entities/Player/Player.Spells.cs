@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1095,10 +1095,12 @@ namespace Game.Entities
             var skillStatusData = mSkillStatus.LookupByKey(id);
             SkillInfo skillInfoField = m_activePlayerData.Skill;
 
-            //has skill
-            if (skillStatusData != null && skillStatusData.State != SkillState.Deleted)
+            // Handle already stored skills
+            if (skillStatusData != null)
             {
                 currVal = skillInfoField.SkillRank[skillStatusData.Pos];
+
+                // Activate and update skill line
                 if (newVal != 0)
                 {
                     // if skill value is going down, update enchantments before setting the new value
@@ -1111,9 +1113,6 @@ namespace Game.Entities
                     SetSkillRank(skillStatusData.Pos, (ushort)newVal);
                     SetSkillMaxRank(skillStatusData.Pos, (ushort)maxVal);
 
-                    if (skillStatusData.State != SkillState.New)
-                        skillStatusData.State = SkillState.Changed;
-
                     LearnSkillRewardedSpells(id, newVal);
                     // if skill value is going up, update enchantments after setting the new value
                     if (newVal > currVal)
@@ -1121,8 +1120,17 @@ namespace Game.Entities
 
                     UpdateCriteria(CriteriaTypes.ReachSkillLevel, id);
                     UpdateCriteria(CriteriaTypes.LearnSkillLevel, id);
+
+                    // update skill state
+                    if (skillStatusData.State == SkillState.Unchanged)
+                    {
+                        if (currVal == 0)   // activated skill, mark as new to save into database
+                            skillStatusData.State = SkillState.New;
+                        else                // updated skill, mark as changed to save into database
+                            skillStatusData.State = SkillState.Changed;
+                    }
                 }
-                else                                                //remove
+                else if(currVal != 0 && newVal == 0) // Deactivate skill line
                 {
                     //remove enchantments needing this skill
                     UpdateSkillEnchantments(id, currVal, 0);
@@ -1134,9 +1142,11 @@ namespace Game.Entities
                     SetSkillTempBonus(skillStatusData.Pos, 0);
                     SetSkillPermBonus(skillStatusData.Pos, 0);
 
-                    // mark as deleted or simply remove from map if not saved yet
+                    // mark as deleted so the next save will delete the data from the database
                     if (skillStatusData.State != SkillState.New)
                         skillStatusData.State = SkillState.Deleted;
+                    else
+                        skillStatusData.State = SkillState.Unchanged;
 
                     // remove all spells that related to this skill
                     List<SkillLineAbilityRecord> skillLineAbilities = Global.DB2Mgr.GetSkillLineAbilitiesBySkill(id);
@@ -1160,99 +1170,104 @@ namespace Game.Entities
                         SetUpdateFieldValue(ref m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.ProfessionSkillLine, 1), 0u);
                 }
             }
-            else                                      //add
+            else
             {
-                currVal = 0;
-                for (uint i = 0; i < SkillConst.MaxPlayerSkills; ++i)
+                // We are about to learn a skill that has been added outside of normal circumstances (Game Master command, scripts etc.)
+                byte skillSlot = 0;
+
+                // Find a free skill slot
+                for (int i = 0; i < SkillConst.MaxPlayerSkills; ++i)
                 {
-                    if (skillInfoField.SkillLineID[(int)i] == 0)
+                    if (((SkillInfo)m_activePlayerData.Skill).SkillLineID[i] == 0)
                     {
-                        var skillEntry = CliDB.SkillLineStorage.LookupByKey(id);
-                        if (skillEntry == null)
-                        {
-                            Log.outError(LogFilter.Spells, "Skill not found in SkillLineStore: skill #{0}", id);
-                            return;
-                        }
-
-
-                        if (skillEntry.ParentSkillLineID != 0)
-                        {
-                            SkillRaceClassInfoRecord rcEntry = Global.DB2Mgr.GetSkillRaceClassInfo(skillEntry.ParentSkillLineID, GetRace(), GetClass());
-                            if (rcEntry != null)
-                            {
-                                SkillTiersEntry tier = Global.ObjectMgr.GetSkillTier(rcEntry.SkillTierID);
-                                if (tier != null)
-                                {
-                                    ushort skillval = GetPureSkillValue((SkillType)skillEntry.ParentSkillLineID);
-                                    SetSkill(skillEntry.ParentSkillLineID, (uint)skillEntry.ParentTierIndex, Math.Max(skillval, (ushort)1), tier.Value[skillEntry.ParentTierIndex - 1]);
-                                }
-                            }
-                        }
-                        else
-                        {                     // also learn missing child skills at 0 value
-                            List<SkillLineRecord> childSkillLines = Global.DB2Mgr.GetSkillLinesForParentSkill(id);
-                            if (childSkillLines != null)
-                                foreach (SkillLineRecord childSkillLine in childSkillLines)
-                                    if (!HasSkill((SkillType)childSkillLine.Id))
-                                        SetSkill(childSkillLine.Id, 0, 0, 0);
-
-                            if (skillEntry.CategoryID == SkillCategory.Profession)
-                            {
-                                int freeProfessionSlot = FindProfessionSlotFor(id);
-                                if (freeProfessionSlot != -1)
-                                    SetUpdateFieldValue(ref m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.ProfessionSkillLine, freeProfessionSlot), id);
-                            }
-                        }
-
-                        SetSkillLineId(i, (ushort)id);
-
-                        SetSkillStep(i, (ushort)step);
-                        SetSkillRank(i, (ushort)newVal);
-                        SetSkillStartingRank(i, 1);
-                        SetSkillMaxRank(i, (ushort)maxVal);
-
-                        // apply skill bonuses
-                        SetSkillTempBonus(i, 0);
-                        SetSkillPermBonus(i, 0);
-
-                        UpdateSkillEnchantments(id, currVal, (ushort)newVal);
-
-                        // insert new entry or update if not deleted old entry yet
-                        if (skillStatusData != null)
-                        {
-                            skillStatusData.Pos = (byte)i;
-                            skillStatusData.State = SkillState.Changed;
-                        }
-                        else
-                            mSkillStatus.Add(id, new SkillStatusData((uint)i, SkillState.New));
-
-                        if (newVal != 0)
-                        {
-                            UpdateCriteria(CriteriaTypes.ReachSkillLevel, id);
-                            UpdateCriteria(CriteriaTypes.LearnSkillLevel, id);
-
-                            // temporary bonuses
-                            var mModSkill = GetAuraEffectsByType(AuraType.ModSkill);
-                            foreach (var auraEffect in mModSkill)
-                                if (auraEffect.GetMiscValue() == id)
-                                    auraEffect.HandleEffect(this, AuraEffectHandleModes.Skill, true);
-
-                            var mModSkill2 = GetAuraEffectsByType(AuraType.ModSkill2);
-                            foreach (var auraEffect in mModSkill2)
-                                if (auraEffect.GetMiscValue() == id)
-                                    auraEffect.HandleEffect(this, AuraEffectHandleModes.Skill, true);
-
-                            // permanent bonuses
-                            var mModSkillTalent = GetAuraEffectsByType(AuraType.ModSkillTalent);
-                            foreach (var auraEffect in mModSkillTalent)
-                                if (auraEffect.GetMiscValue() == id)
-                                    auraEffect.HandleEffect(this, AuraEffectHandleModes.Skill, true);
-
-                            // Learn all spells for skill
-                            LearnSkillRewardedSpells(id, newVal);
-                        }
-                        return;
+                        skillSlot = (byte)i;
+                        break;
                     }
+                }
+
+                if (skillSlot == 0)
+                {
+                    Log.outError(LogFilter.Misc, $"Tried to add skill {id} but player {GetName()} ({GetGUID().ToString()}) cannot have additional skills");
+                    return;
+                }
+
+                SkillLineRecord skillEntry = CliDB.SkillLineStorage.LookupByKey(id);
+                if (skillEntry == null)
+                {
+                    Log.outError(LogFilter.Misc, $"Player.SetSkill: Skill (SkillID: {id}) not found in SkillLineStore for player '{GetName()}' ({GetGUID().ToString()})");
+                    return;
+                }
+
+                if (skillEntry.ParentSkillLineID != 0)
+                {
+                    if (skillEntry.ParentTierIndex > 0)
+                    {
+                        SkillRaceClassInfoRecord rcEntry = Global.DB2Mgr.GetSkillRaceClassInfo(skillEntry.ParentSkillLineID, GetRace(), GetClass());
+                        if (rcEntry != null)
+                        {
+                            SkillTiersEntry tier = Global.ObjectMgr.GetSkillTier(rcEntry.SkillTierID);
+                            if (tier != null)
+                            {
+                                ushort skillval = GetPureSkillValue((SkillType)skillEntry.ParentSkillLineID);
+                                SetSkill(skillEntry.ParentSkillLineID, (uint)skillEntry.ParentTierIndex, Math.Max(skillval, (ushort)1), tier.Value[skillEntry.ParentTierIndex - 1]);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // also learn missing child skills at 0 value
+                    List<SkillLineRecord> childSkillLines = Global.DB2Mgr.GetSkillLinesForParentSkill(id);
+                    if (childSkillLines != null)
+                        foreach (SkillLineRecord childSkillLine in childSkillLines)
+                            if (!HasSkill((SkillType)childSkillLine.Id))
+                                SetSkill(childSkillLine.Id, 0, 0, 0);
+
+                    if (skillEntry.CategoryID == SkillCategory.Profession)
+                    {
+                        int freeProfessionSlot = FindProfessionSlotFor(id);
+                        if (freeProfessionSlot != -1)
+                            SetUpdateFieldValue(ref m_values.ModifyValue(m_activePlayerData).ModifyValue(m_activePlayerData.ProfessionSkillLine, freeProfessionSlot), id);
+                    }
+                }
+
+                if (skillStatusData == null)
+                    SetSkillLineId(skillSlot, (ushort)id);
+
+                SetSkillStep(skillSlot, (ushort)step);
+                SetSkillRank(skillSlot, (ushort)newVal);
+                SetSkillStartingRank(skillSlot, 1);
+                SetSkillMaxRank(skillSlot, (ushort)maxVal);
+
+                // apply skill bonuses
+                SetSkillTempBonus(skillSlot, 0);
+                SetSkillPermBonus(skillSlot, 0);
+
+                UpdateSkillEnchantments(id, 0, (ushort)newVal);
+                
+                mSkillStatus.Add(id, new SkillStatusData(skillSlot, SkillState.New));
+
+                if (newVal != 0)
+                {
+                    UpdateCriteria(CriteriaTypes.ReachSkillLevel, id);
+                    UpdateCriteria(CriteriaTypes.LearnSkillLevel, id);
+
+                    // temporary bonuses
+                    foreach (var auraEffect in GetAuraEffectsByType(AuraType.ModSkill))
+                        if (auraEffect.GetMiscValue() == id)
+                            auraEffect.HandleEffect(this, AuraEffectHandleModes.Skill, true);
+
+                    foreach (var auraEffect in GetAuraEffectsByType(AuraType.ModSkill2))
+                        if (auraEffect.GetMiscValue() == id)
+                            auraEffect.HandleEffect(this, AuraEffectHandleModes.Skill, true);
+
+                    // permanent bonuses
+                    foreach (var auraEffect in GetAuraEffectsByType(AuraType.ModSkillTalent))
+                        if (auraEffect.GetMiscValue() == id)
+                            auraEffect.HandleEffect(this, AuraEffectHandleModes.Skill, true);
+
+                    // Learn all spells for skill
+                    LearnSkillRewardedSpells(id, newVal);
                 }
             }
         }

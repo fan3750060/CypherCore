@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -653,15 +653,15 @@ namespace Game.Chat
 
             if (!int.TryParse(difficulty_str, out int difficulty))
                 difficulty = -1;
-            if (difficulty >= (int)Difficulty.Max || difficulty < -1)
+            if (CliDB.DifficultyStorage.HasRecord((uint)difficulty) || difficulty < -1)
                 return false;
 
             if (difficulty == -1)
             {
-                for (byte diff = 0; diff < (int)Difficulty.Max; ++diff)
+                foreach (var diffRecord in CliDB.DifficultyStorage.Values)
                 {
-                    if (Global.DB2Mgr.GetMapDifficultyData((uint)map, (Difficulty)diff) != null)
-                        Global.InstanceSaveMgr.ForceGlobalReset((uint)map, (Difficulty)diff);
+                    if (Global.DB2Mgr.GetMapDifficultyData((uint)map, (Difficulty)diffRecord.Id) != null)
+                        Global.InstanceSaveMgr.ForceGlobalReset((uint)map, (Difficulty)diffRecord.Id);
                 }
             }
             else

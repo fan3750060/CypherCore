@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -328,6 +328,7 @@ namespace Game.Entities
             InitStatsForLevel();
             InitTaxiNodesForLevel();
             InitTalentForLevel();
+            InitializeSkillFields();
             InitPrimaryProfessions();                               // to max set before any spell added
 
             // apply original stats mods before spell loading or item equipment that call before equip _RemoveStatsMods()
@@ -786,16 +787,16 @@ namespace Game.Entities
         {
             base.DestroyForPlayer(target);
 
-            for (byte i = 0; i < EquipmentSlot.End; ++i)
-            {
-                if (m_items[i] == null)
-                    continue;
-
-                m_items[i].DestroyForPlayer(target);
-            }
-
             if (target == this)
             {
+                for (byte i = 0; i < EquipmentSlot.End; ++i)
+                {
+                    if (m_items[i] == null)
+                        continue;
+
+                    m_items[i].DestroyForPlayer(target);
+                }
+
                 for (byte i = InventorySlots.BagStart; i < InventorySlots.BagEnd; ++i)
                 {
                     if (m_items[i] == null)
@@ -5781,11 +5782,6 @@ namespace Game.Entities
                 _garrison.SendRemoteInfo();
 
             UpdateItemLevelAreaBasedScaling();
-        }
-
-        public bool CanSpeak()
-        {
-            return GetSession().m_muteTime <= Time.UnixTime;
         }
 
         public void RemoveSocial()

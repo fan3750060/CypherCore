@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -246,10 +246,17 @@ namespace Game
             //}
 
             // prevent character creating Expansion class without Expansion account
-            var classExpansionRequirement = Global.ObjectMgr.GetClassExpansionRequirement(charCreate.CreateInfo.ClassId);
-            if (classExpansionRequirement > GetAccountExpansion())
+            ClassAvailability classExpansionRequirement = Global.ObjectMgr.GetClassExpansionRequirement(charCreate.CreateInfo.RaceId, charCreate.CreateInfo.ClassId);
+            if (classExpansionRequirement == null)
             {
-                Log.outError(LogFilter.Network, $"Expansion {GetAccountExpansion()} account:[{GetAccountId()}] tried to Create character with expansion {classExpansionRequirement} class ({charCreate.CreateInfo.ClassId})");
+                Log.outError(LogFilter.Player, $"Expansion {GetAccountExpansion()} account:[{GetAccountId()}] tried to Create character for race/class combination that is missing requirements in db ({charCreate.CreateInfo.RaceId}/{charCreate.CreateInfo.ClassId})");
+                SendCharCreate(ResponseCodes.CharCreateExpansionClass);
+                return;
+            }
+
+            if (classExpansionRequirement.ActiveExpansionLevel > (int)GetExpansion() || classExpansionRequirement.AccountExpansionLevel > (int)GetAccountExpansion())
+            {
+                Log.outError(LogFilter.Player, $"Account:[{GetAccountId()}] tried to create character with race/class {charCreate.CreateInfo.RaceId}/{charCreate.CreateInfo.ClassId} without required expansion(had {GetExpansion()}/{GetAccountExpansion()}, required {classExpansionRequirement.ActiveExpansionLevel}/{classExpansionRequirement.AccountExpansionLevel})");
                 SendCharCreate(ResponseCodes.CharCreateExpansionClass);
                 return;
             }
@@ -908,6 +915,10 @@ namespace Game
             features.EuropaTicketSystemStatus.Value.BugsEnabled = WorldConfig.GetBoolValue(WorldCfg.SupportBugsEnabled);
             features.EuropaTicketSystemStatus.Value.ComplaintsEnabled = WorldConfig.GetBoolValue(WorldCfg.SupportComplaintsEnabled);
             features.EuropaTicketSystemStatus.Value.SuggestionsEnabled = WorldConfig.GetBoolValue(WorldCfg.SupportSuggestionsEnabled);
+
+            features.CharUndeleteEnabled = WorldConfig.GetBoolValue(WorldCfg.FeatureSystemCharacterUndeleteEnabled);
+            features.BpayStoreEnabled = WorldConfig.GetBoolValue(WorldCfg.FeatureSystemBpayStoreEnabled);
+            features.IsMuted = !CanSpeak();
 
             SendPacket(features);
         }

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ namespace Game.Chat
         [Command("move", RBACPermissions.CommandNpcMove)]
         static bool Move(StringArguments args, CommandHandler handler)
         {
-            ulong lowguid = 0;
+            ulong lowguid;
 
             Creature creature = handler.GetSelectedCreature();
             if (!creature)
@@ -812,7 +812,7 @@ namespace Game.Chat
                 if (string.IsNullOrEmpty(guid_str))
                     return false;
 
-                ulong lowguid = 0;
+                ulong lowguid;
                 Creature creature = null;
 
                 if (!string.IsNullOrEmpty(dontdel_str))
@@ -980,7 +980,7 @@ namespace Game.Chat
                     mtype = MovementGeneratorType.Random;
 
                 Creature creature = handler.GetSelectedCreature();
-                ulong guidLow = 0;
+                ulong guidLow;
 
                 if (creature)
                     guidLow = creature.GetSpawnId();

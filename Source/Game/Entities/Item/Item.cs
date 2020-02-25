@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -3100,7 +3100,7 @@ namespace Game.Entities
                         info.AzeriteItem.SelectedAzeriteEssences[i].SpecializationId = specializationId;
                         for (int j = 0; j < SharedConst.MaxAzeriteEssenceSlot; ++j)
                         {
-                            AzeriteEssenceRecord azeriteEssence = CliDB.AzeriteEssenceStorage.LookupByKey(azeriteItemResult.Read<uint>(5 + i * 4 + j));
+                            AzeriteEssenceRecord azeriteEssence = CliDB.AzeriteEssenceStorage.LookupByKey(azeriteItemResult.Read<uint>(5 + i * 5 + j));
                             if (azeriteEssence == null || !Global.DB2Mgr.IsSpecSetMember(azeriteEssence.SpecSetID, specializationId))
                                 continue;
 

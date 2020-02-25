@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -118,8 +118,7 @@ namespace Game.Chat.Commands
                     return false;
                 }
 
-                uint itemCount = 0;
-                if (string.IsNullOrEmpty(itemCountStr) || !uint.TryParse(itemCountStr, out itemCount))
+                if (string.IsNullOrEmpty(itemCountStr) || !uint.TryParse(itemCountStr, out uint itemCount))
                     itemCount = 1;
 
                 if (itemCount < 1 || (item_proto.GetMaxCount() > 0 && itemCount > item_proto.GetMaxCount()))

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ namespace Game.Chat
         static bool HandleGuildUninviteCommand(StringArguments args, CommandHandler handler)
         {
             Player target;
-            ObjectGuid targetGuid = ObjectGuid.Empty;
+            ObjectGuid targetGuid;
             if (!handler.ExtractPlayerTarget(args, out target, out targetGuid))
                 return false;
 
@@ -126,8 +126,7 @@ namespace Game.Chat
 
             Player target;
             ObjectGuid targetGuid;
-            string target_name;
-            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid, out target_name))
+            if (!handler.ExtractPlayerTarget(new StringArguments(nameStr), out target, out targetGuid, out _))
                 return false;
 
             ulong guildId = target ? target.GetGuildId() : Global.CharacterCacheStorage.GetCharacterGuildIdByGuid(targetGuid);

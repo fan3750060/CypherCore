@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -213,12 +213,12 @@ namespace Game.BlackMarket
             if (entry.GetMailSent())
                 return;
 
-            uint bidderAccId = 0;
+            uint bidderAccId;
             ObjectGuid bidderGuid = ObjectGuid.Create(HighGuid.Player, entry.GetBidder());
             Player bidder = Global.ObjAccessor.FindConnectedPlayer(bidderGuid);
             // data for gm.log
             string bidderName = "";
-            bool logGmTrade = false;
+            bool logGmTrade;
 
             if (bidder)
             {

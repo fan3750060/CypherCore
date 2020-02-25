@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -446,17 +446,6 @@ namespace Game.AI
                 return;
 
             MovepointReached(Data);
-        }
-
-        void RemoveAuras()
-        {
-            //fixme: duplicated logic in CreatureAI._EnterEvadeMode (could use RemoveAllAurasExceptType)
-            foreach (var pair in me.GetAppliedAuras())
-            {
-                Aura aura = pair.Value.GetBase();
-                if (!aura.IsPassive() && !aura.HasEffectType(AuraType.ControlVehicle) && !aura.HasEffectType(AuraType.CloneCaster) && aura.GetCasterGUID() != me.GetGUID())
-                    me.RemoveAura(pair);
-            }
         }
 
         public override void EnterEvadeMode(EvadeReason why = EvadeReason.Other)

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2012-2019 CypherCore <http://github.com/CypherCore>
+ * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -428,7 +428,7 @@ namespace Game.BattleGrounds.Zones
                 return;
 
             source.RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags.EnterPvpCombat);
-            uint sound = 0;
+            uint sound;
             // If node is neutral, change to contested
             if (m_Nodes[node] == ABNodeStatus.Neutral)
             {
